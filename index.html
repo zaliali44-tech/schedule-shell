@@ -1,408 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Schedule Shell Generator</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Schedule Shell Generator</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <style>
-    body{
-      font-family:Arial, sans-serif;
-      background:#f4f7fb;
-      margin:40px;
-      color:#111827;
-    }
+<style>
+body{
+  font-family:Arial, sans-serif;
+  background:#f4f7fb;
+  margin:40px;
+  color:#111827;
+}
 
-    h1{
-      text-align:center;
-      margin-bottom:10px;
-    }
+h1{
+  text-align:center;
+  margin-bottom:10px;
+}
 
-    h2,h3{
-      margin-top:0;
-    }
+h2,h3{
+  margin-top:0;
+}
 
-    .subtitle{
-      text-align:center;
-      color:#475569;
-      margin-bottom:30px;
-    }
+.subtitle{
+  text-align:center;
+  color:#475569;
+  margin-bottom:30px;
+}
 
-    .section{
-      background:white;
-      padding:20px;
-      margin-bottom:25px;
-      border-radius:10px;
-      box-shadow:0 3px 10px rgba(0,0,0,0.08);
-    }
+.section{
+  background:white;
+  padding:20px;
+  margin-bottom:25px;
+  border-radius:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
 
-    .dashboard{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:20px;
-    }
+.dashboard{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
 
-    .three-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:20px;
-    }
+.three-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:20px;
+}
 
-    .field-grid{
-      display:grid;
-      grid-template-columns:repeat(4, minmax(180px, 1fr));
-      gap:10px;
-      margin-top:10px;
-    }
+.field-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(180px, 1fr));
+  gap:10px;
+  margin-top:10px;
+}
 
-    .kpi-grid{
-      display:grid;
-      grid-template-columns:repeat(6, minmax(160px, 1fr));
-      gap:12px;
-      margin-top:15px;
-    }
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(6, minmax(160px, 1fr));
+  gap:12px;
+  margin-top:15px;
+}
 
-    .kpi-card{
-      background:#f8fafc;
-      border:1px solid #e2e8f0;
-      padding:14px;
-      border-radius:10px;
-    }
+.kpi-card{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  padding:14px;
+  border-radius:10px;
+}
 
-    .kpi-title{
-      font-size:12px;
-      color:#475569;
-      margin-bottom:6px;
-      font-weight:bold;
-    }
+.kpi-title{
+  font-size:12px;
+  color:#475569;
+  margin-bottom:6px;
+  font-weight:bold;
+}
 
-    .kpi-value{
-      font-size:22px;
-      font-weight:bold;
-      color:#0f172a;
-      margin-bottom:6px;
-    }
+.kpi-value{
+  font-size:22px;
+  font-weight:bold;
+  color:#0f172a;
+  margin-bottom:6px;
+}
 
-    .kpi-note{
-      font-size:12px;
-      color:#64748b;
-      line-height:1.4;
-    }
+.kpi-note{
+  font-size:12px;
+  color:#64748b;
+  line-height:1.4;
+}
 
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:5px;
-    }
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
 
-    label{
-      font-size:13px;
-      color:#334155;
-      font-weight:bold;
-    }
+label{
+  font-size:13px;
+  color:#334155;
+  font-weight:bold;
+}
 
-    input, select, textarea{
-      padding:8px;
-      border:1px solid #cbd5e1;
-      border-radius:5px;
-      font-size:14px;
-      background:#fff;
-    }
+input, select, textarea{
+  padding:8px;
+  border:1px solid #cbd5e1;
+  border-radius:5px;
+  font-size:14px;
+  background:#fff;
+}
 
-    button{
-      padding:10px 16px;
-      background:#2c7be5;
-      color:white;
-      border:none;
-      border-radius:5px;
-      cursor:pointer;
-      font-size:14px;
-    }
+button{
+  padding:10px 16px;
+  background:#2c7be5;
+  color:white;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:14px;
+}
 
-    button:hover{
-      background:#1f6ad0;
-    }
+button:hover{
+  background:#1f6ad0;
+}
 
-    .button-row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:15px;
-    }
+.button-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:13px;
-    }
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
 
-    th,td{
-      border:1px solid #ddd;
-      padding:8px;
-      text-align:center;
-      white-space:nowrap;
-    }
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+  white-space:nowrap;
+}
 
-    th{
-      background:#eef2f7;
-      position:sticky;
-      top:0;
-      z-index:2;
-    }
+th{
+  background:#eef2f7;
+  position:sticky;
+  top:0;
+  z-index:2;
+}
 
-    .table-scroll{
-      margin-top:15px;
-      max-height:620px;
-      overflow:auto;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-    }
+.table-scroll{
+  margin-top:15px;
+  max-height:620px;
+  overflow:auto;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+}
 
-    .helper{
-      background:#eef6ff;
-      padding:12px;
-      border-radius:8px;
-      margin-top:10px;
-      margin-bottom:10px;
-      line-height:1.5;
-      font-size:14px;
-    }
+.helper{
+  background:#eef6ff;
+  padding:12px;
+  border-radius:8px;
+  margin-top:10px;
+  margin-bottom:10px;
+  line-height:1.5;
+  font-size:14px;
+}
 
-    .fixed-box{
-      background:#f8fafc;
-      border:1px solid #e2e8f0;
-      padding:12px;
-      border-radius:8px;
-      margin-top:15px;
-      line-height:1.7;
-      font-size:14px;
-    }
+.fixed-box{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  padding:12px;
+  border-radius:8px;
+  margin-top:15px;
+  line-height:1.7;
+  font-size:14px;
+}
 
-    .result-box{
-      margin-top:12px;
-      padding:12px;
-      border-radius:8px;
-      background:#f8fafc;
-      border:1px solid #e2e8f0;
-      min-height:20px;
-    }
+.result-box{
+  margin-top:12px;
+  padding:12px;
+  border-radius:8px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  min-height:20px;
+}
 
-    #dropZone{
-      border:2px dashed #2c7be5;
-      padding:25px;
-      text-align:center;
-      margin-top:15px;
-      border-radius:10px;
-      background:#f0f6ff;
-      transition:0.2s;
-    }
+#dropZone{
+  border:2px dashed #2c7be5;
+  padding:25px;
+  text-align:center;
+  margin-top:15px;
+  border-radius:10px;
+  background:#f0f6ff;
+  transition:0.2s;
+}
 
-    #dropZone.dragover{
-      background:#dbe9ff;
-      border-color:#1f6ad0;
-    }
+#dropZone.dragover{
+  background:#dbe9ff;
+  border-color:#1f6ad0;
+}
 
-    .chart-box{
-      position:relative;
-      height:300px;
-      margin-top:20px;
-    }
+.chart-box{
+  position:relative;
+  height:300px;
+  margin-top:20px;
+}
 
-    .summary-item{
-      margin-bottom:10px;
-      line-height:1.6;
-    }
+.summary-item{
+  margin-bottom:10px;
+  line-height:1.6;
+}
 
-    .hidden{
-      display:none;
-    }
+.hidden{
+  display:none;
+}
 
-    @media(max-width:1100px){
-      .dashboard, .three-grid, .field-grid, .kpi-grid{
-        grid-template-columns:1fr;
-      }
+@media(max-width:1100px){
+  .dashboard, .three-grid, .field-grid, .kpi-grid{
+    grid-template-columns:1fr;
+  }
 
-      body{
-        margin:20px;
-      }
-    }
-  </style>
+  body{
+    margin:20px;
+  }
+}
+</style>
 </head>
 <body>
 
-  <h1>Schedule Shell Generator</h1>
-  <div class="subtitle">
-    Generate weekly agent-wise schedules from interval requirement using the same theme as your WFM toolkit.
-  </div>
+<h1>Schedule Shell Generator</h1>
+<div class="subtitle">
+  Generate weekly agent-wise schedules from interval requirement using the same theme as your WFM toolkit.
+</div>
 
-  <div class="section">
-    <h2>Schedule Configuration</h2>
+<div class="section">
+  <h2>Schedule Configuration</h2>
 
-    <div class="field-grid">
-      <div class="field">
-        <label for="planningMode">Planning Mode</label>
-        <select id="planningMode">
-          <option value="calculate" selected>Calculate HC for Me</option>
-          <option value="fixed">Use My Available HC</option>
-        </select>
-      </div>
-
-      <div class="field hidden" id="availableHcWrapper">
-        <label for="availableHC">Available HC</label>
-        <input id="availableHC" type="number" min="1" placeholder="75" value="75">
-      </div>
-
-      <div class="field">
-        <label for="intervalSize">Interval Size</label>
-        <select id="intervalSize">
-          <option value="30" selected>30 minutes</option>
-          <option value="60">60 minutes</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="operatingHours">Operating Hours Per Day</label>
-        <select id="operatingHours">
-          <option value="9">9</option>
-          <option value="10">10</option>
-          <option value="11">11</option>
-          <option value="12" selected>12</option>
-          <option value="13">13</option>
-          <option value="14">14</option>
-          <option value="15">15</option>
-          <option value="16">16</option>
-          <option value="18">18</option>
-          <option value="20">20</option>
-          <option value="24">24</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="operatingDays">Operating Days Per Week</label>
-        <select id="operatingDays">
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7" selected>7</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="workingDays">Working Days Per Week</label>
-        <select id="workingDays">
-          <option value="5" selected>5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="weekOffPattern">Week Off Pattern</label>
-        <select id="weekOffPattern">
-          <option value="best" selected>Best Fit</option>
-          <option value="continuous">Continuous</option>
-          <option value="split">Split</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="startInterval">Start Interval</label>
-        <select id="startInterval">
-          <option value="30" selected>30 minutes</option>
-          <option value="60">60 minutes</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="peakProtection">Peak Protection Level</label>
-        <select id="peakProtection">
-          <option value="strict">Strict</option>
-          <option value="moderate" selected>Moderate</option>
-          <option value="flexible">Flexible</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="shoulderProtection">Shoulder Protection Level</label>
-        <select id="shoulderProtection">
-          <option value="strict">Strict</option>
-          <option value="moderate" selected>Moderate</option>
-          <option value="flexible">Flexible</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="hoopStart">HOOP Start Time</label>
-        <input id="hoopStart" type="time" value="08:00">
-      </div>
-
-      <div class="field">
-        <label for="earliestStart">Earliest Shift Start</label>
-        <input id="earliestStart" type="time" value="08:00">
-      </div>
-
-      <div class="field">
-        <label for="latestEnd">Latest Shift End</label>
-        <input id="latestEnd" type="time" value="20:00">
-      </div>
-
-      <div class="field">
-        <label for="mealOffset">Meal Window Offset from Start (hours)</label>
-        <input id="mealOffset" type="number" step="0.5" value="4" placeholder="4">
-      </div>
-
-      <div class="field">
-        <label for="staggerGap">Break / Meal Stagger Gap (minutes)</label>
-        <input id="staggerGap" type="number" value="30" placeholder="30">
-      </div>
+  <div class="field-grid">
+    <div class="field">
+      <label for="planningMode">Planning Mode</label>
+      <select id="planningMode">
+        <option value="calculate" selected>Calculate HC for Me</option>
+        <option value="fixed">Use My Available HC</option>
+      </select>
     </div>
 
-    <div class="fixed-box">
-      <strong>Fixed Rules (Version 1)</strong><br>
-      Shift Length: 9 hours<br>
-      Lunch: 60 minutes<br>
-      Breaks: 2 × 15 minutes<br>
-      Productive Hours per Day: 7.5<br>
-      Weekly Off Days Within Open Days: <span id="offDaysDisplay">0</span><br>
-      Auto-calculated HOOP End: <span id="hoopEndDisplay">20:00</span>
+    <div class="field hidden" id="availableHcWrapper">
+      <label for="availableHC">Available HC</label>
+      <input id="availableHC" type="number" min="1" placeholder="75" value="75">
     </div>
 
-    <div class="helper">
-      Weekly upload format should be:<br>
-      <strong>Interval, Mon, Tue, Wed, Thu, Fri, Sat, Sun</strong><br>
-      Example:<br>
-      09:00,20,20,20,10,20,28,20<br>
-      09:30,24,22,24,12,24,30,24<br><br>
-      For 5 or 6 operating days, the system treats the remaining days as closed from the start of the week order:
-      5 days = Mon-Fri open, 6 days = Mon-Sat open, 7 days = Mon-Sun open.
+    <div class="field">
+      <label for="intervalSize">Interval Size</label>
+      <select id="intervalSize">
+        <option value="30" selected>30 minutes</option>
+        <option value="60">60 minutes</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="operatingHours">Operating Hours Per Day</label>
+      <select id="operatingHours">
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12" selected>12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="18">18</option>
+        <option value="20">20</option>
+        <option value="24">24</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="operatingDays">Operating Days Per Week</label>
+      <select id="operatingDays">
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7" selected>7</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="workingDays">Working Days Per Week</label>
+      <select id="workingDays">
+        <option value="5" selected>5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="weekOffPattern">Week Off Pattern</label>
+      <select id="weekOffPattern">
+        <option value="best" selected>Best Fit</option>
+        <option value="continuous">Continuous</option>
+        <option value="split">Split</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="startInterval">Start Interval</label>
+      <select id="startInterval">
+        <option value="30" selected>30 minutes</option>
+        <option value="60">60 minutes</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="peakProtection">Peak Protection Level</label>
+      <select id="peakProtection">
+        <option value="strict">Strict</option>
+        <option value="moderate" selected>Moderate</option>
+        <option value="flexible">Flexible</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="shoulderProtection">Shoulder Protection Level</label>
+      <select id="shoulderProtection">
+        <option value="strict">Strict</option>
+        <option value="moderate" selected>Moderate</option>
+        <option value="flexible">Flexible</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="hoopStart">HOOP Start Time</label>
+      <input id="hoopStart" type="time" value="08:00">
+    </div>
+
+    <div class="field">
+      <label for="earliestStart">Earliest Shift Start</label>
+      <input id="earliestStart" type="time" value="08:00">
+    </div>
+
+    <div class="field">
+      <label for="latestEnd">Latest Shift End</label>
+      <input id="latestEnd" type="time" value="20:00">
+    </div>
+
+    <div class="field">
+      <label for="mealOffset">Meal Window Offset from Start (hours)</label>
+      <input id="mealOffset" type="number" step="0.5" value="4" placeholder="4">
+    </div>
+
+    <div class="field">
+      <label for="staggerGap">Break / Meal Stagger Gap (minutes)</label>
+      <input id="staggerGap" type="number" value="30" placeholder="30">
     </div>
   </div>
 
-  <div class="section">
-    <h2>Upload Requirement File</h2>
-
-    <div class="button-row">
-      <button type="button" onclick="downloadSampleTemplate()">Download Sample Template</button>
-      <button type="button" onclick="document.getElementById('fileInput').click()">Upload File</button>
-      <button type="button" onclick="generateSchedules()">Generate Schedules</button>
-    </div>
-
-    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;">
-
-    <div id="dropZone">Drag & Drop Excel or CSV File Here</div>
-    <div class="result-box" id="uploadStatus">No file uploaded yet.</div>
+  <div class="fixed-box">
+    <strong>Fixed Rules (Version 1)</strong><br>
+    Shift Length: 9 hours<br>
+    Lunch: 60 minutes<br>
+    Breaks: 2 × 15 minutes<br>
+    Productive Hours per Day: 7.5<br>
+    Weekly Off Days Within Open Days: <span id="offDaysDisplay">0</span><br>
+    Auto-calculated HOOP End: <span id="hoopEndDisplay">20:00</span>
   </div>
 
-  <div class="section">
-    <h2>Uploaded Weekly Requirement</h2>
+  <div class="helper">
+    Weekly upload format should be:<br>
+    <strong>Interval, Mon, Tue, Wed, Thu, Fri, Sat, Sun</strong><br>
+    Example:<br>
+    09:00,20,20,20,10,20,28,20<br>
+    09:30,24,22,24,12,24,30,24<br><br>
+    For 5 or 6 operating days, the tool treats the remaining days as closed in this order:
+    5 days = Mon-Fri open, 6 days = Mon-Sat open, 7 days = Mon-Sun open.
+  </div>
+</div>
+
+<div class="section">
+  <h2>Upload Requirement File</h2>
+
+  <div class="button-row">
+    <button type="button" onclick="downloadSampleTemplate()">Download Sample Template</button>
+    <button type="button" onclick="document.getElementById('fileInput').click()">Upload File</button>
+    <button type="button" onclick="generateSchedules()">Generate Schedules</button>
+  </div>
+
+  <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+
+  <div id="dropZone">Drag & Drop Excel or CSV File Here</div>
+  <div class="result-box" id="uploadStatus">No file uploaded yet.</div>
+</div>
+
+<div class="section">
+  <h2>Uploaded Weekly Requirement</h2>
+  <div class="table-scroll">
+    <table id="requirementTable">
+      <thead>
+        <tr>
+          <th>Interval</th>
+          <th>Mon</th>
+          <th>Tue</th>
+          <th>Wed</th>
+          <th>Thu</th>
+          <th>Fri</th>
+          <th>Sat</th>
+          <th>Sun</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Weekly HC Summary</h2>
+  <div class="kpi-grid" id="hcSummaryGrid">
+    <div class="kpi-card">
+      <div class="kpi-title">Weekly Required Agent-Hours</div>
+      <div class="kpi-value" id="kpiWeeklyHours">0</div>
+      <div class="kpi-note">Total interval requirement converted into weekly coverage hours.</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Productive Hours / Agent / Week</div>
+      <div class="kpi-value" id="kpiProdHours">0</div>
+      <div class="kpi-note">Based on 9-hour shift minus lunch and breaks × working days.</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Base HC Required</div>
+      <div class="kpi-value" id="kpiBaseHC">0</div>
+      <div class="kpi-note">Weekly required hours ÷ productive weekly hours per agent.</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Peak Concurrent Requirement</div>
+      <div class="kpi-value" id="kpiPeakHC">0</div>
+      <div class="kpi-note">Highest single interval requirement across open days.</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title" id="kpiTargetTitle">Suggested HC Target</div>
+      <div class="kpi-value" id="kpiTargetHC">0</div>
+      <div class="kpi-note" id="kpiTargetNote">Base HC vs peak HC with small planning buffer.</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Generated HC</div>
+      <div class="kpi-value" id="kpiGeneratedHC">0</div>
+      <div class="kpi-note">Actual number of agents created by the generator.</div>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard">
+  <div class="section" style="margin-bottom:0;">
+    <h2>Agent-wise Daily Schedule</h2>
     <div class="table-scroll">
-      <table id="requirementTable">
+      <table id="dailyScheduleTable">
         <thead>
           <tr>
-            <th>Interval</th>
+            <th>Agent</th>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Meal</th>
+            <th>Break 1</th>
+            <th>Break 2</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section" style="margin-bottom:0;">
+    <h2>Weekly Roster</h2>
+    <div class="table-scroll">
+      <table id="weeklyRosterTable">
+        <thead>
+          <tr>
+            <th>Agent</th>
             <th>Mon</th>
             <th>Tue</th>
             <th>Wed</th>
@@ -416,247 +499,194 @@
       </table>
     </div>
   </div>
+</div>
 
-  <div class="section">
-    <h2>Weekly HC Summary</h2>
-    <div class="kpi-grid" id="hcSummaryGrid">
-      <div class="kpi-card">
-        <div class="kpi-title">Weekly Required Agent-Hours</div>
-        <div class="kpi-value" id="kpiWeeklyHours">0</div>
-        <div class="kpi-note">Total open-day interval requirement converted into weekly coverage hours.</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-title">Productive Hours / Agent / Week</div>
-        <div class="kpi-value" id="kpiProdHours">0</div>
-        <div class="kpi-note">Based on 9-hour shift minus lunch and breaks × effective working days.</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-title">Base HC Required</div>
-        <div class="kpi-value" id="kpiBaseHC">0</div>
-        <div class="kpi-note">Weekly required hours ÷ productive weekly hours per agent.</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-title">Peak Concurrent Requirement</div>
-        <div class="kpi-value" id="kpiPeakHC">0</div>
-        <div class="kpi-note">Highest single interval requirement across open days.</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-title" id="kpiTargetTitle">Suggested HC Target</div>
-        <div class="kpi-value" id="kpiTargetHC">0</div>
-        <div class="kpi-note" id="kpiTargetNote">Base HC vs peak HC with small planning buffer.</div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-title">Generated HC</div>
-        <div class="kpi-value" id="kpiGeneratedHC">0</div>
-        <div class="kpi-note">Actual number of agents created by the generator.</div>
-      </div>
+<div class="dashboard" style="margin-top:20px;">
+  <div class="section" style="margin-bottom:0;">
+    <h2>Scheduled Productive Coverage</h2>
+    <div class="table-scroll">
+      <table id="coverageTable">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Interval</th>
+            <th>Required</th>
+            <th>Scheduled Count</th>
+            <th>Productive Count</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 
-  <div class="dashboard">
-    <div class="section" style="margin-bottom:0;">
-      <h2>Agent-wise Daily Schedule</h2>
-      <div class="table-scroll">
-        <table id="dailyScheduleTable">
-          <thead>
-            <tr>
-              <th>Agent</th>
-              <th>Day</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Meal</th>
-              <th>Break 1</th>
-              <th>Break 2</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="section" style="margin-bottom:0;">
-      <h2>Weekly Roster</h2>
-      <div class="table-scroll">
-        <table id="weeklyRosterTable">
-          <thead>
-            <tr>
-              <th>Agent</th>
-              <th>Mon</th>
-              <th>Tue</th>
-              <th>Wed</th>
-              <th>Thu</th>
-              <th>Fri</th>
-              <th>Sat</th>
-              <th>Sun</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+  <div class="section" style="margin-bottom:0;">
+    <h2>Over / Under by Interval</h2>
+    <div class="table-scroll">
+      <table id="gapTable">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Interval</th>
+            <th>Required</th>
+            <th>Productive Coverage</th>
+            <th>Over / Under</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
+</div>
 
-  <div class="dashboard" style="margin-top:20px;">
-    <div class="section" style="margin-bottom:0;">
-      <h2>Scheduled Productive Coverage</h2>
-      <div class="table-scroll">
-        <table id="coverageTable">
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th>Interval</th>
-              <th>Required</th>
-              <th>Scheduled Count</th>
-              <th>Productive Count</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="section" style="margin-bottom:0;">
-      <h2>Over / Under by Interval</h2>
-      <div class="table-scroll">
-        <table id="gapTable">
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th>Interval</th>
-              <th>Required</th>
-              <th>Productive Coverage</th>
-              <th>Over / Under</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+<div class="section">
+  <h2>Coverage & Staffing Charts</h2>
+  <div class="three-grid">
+    <div class="chart-box"><canvas id="dailyTotalsChart"></canvas></div>
+    <div class="chart-box"><canvas id="gapChart"></canvas></div>
+    <div class="chart-box"><canvas id="startDistChart"></canvas></div>
   </div>
+</div>
 
-  <div class="section">
-    <h2>Coverage & Staffing Charts</h2>
-    <div class="three-grid">
-      <div class="chart-box"><canvas id="dailyTotalsChart"></canvas></div>
-      <div class="chart-box"><canvas id="gapChart"></canvas></div>
-      <div class="chart-box"><canvas id="startDistChart"></canvas></div>
-    </div>
+<div class="section">
+  <h2>Planner Summary</h2>
+  <div id="plannerSummary" class="result-box">Generate schedules to see planner insights.</div>
+</div>
+
+<div class="section">
+  <h2>Export Outputs</h2>
+  <div class="button-row">
+    <button type="button" onclick="downloadWeeklyCSV()">Download Weekly Schedule</button>
+    <button type="button" onclick="downloadDailyCSV()">Download Daily Schedule</button>
+    <button type="button" onclick="downloadCoverageCSV()">Download Coverage Summary</button>
   </div>
+</div>
 
-  <div class="section">
-    <h2>Planner Summary</h2>
-    <div id="plannerSummary" class="result-box">Generate schedules to see planner insights.</div>
-  </div>
+<script>
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const SHIFT_MIN = 9 * 60;
+const LUNCH_MIN = 60;
+const BREAK_MIN = 15;
+const BREAK_COUNT = 2;
+const PRODUCTIVE_HOURS_PER_DAY = (SHIFT_MIN - LUNCH_MIN - (BREAK_MIN * BREAK_COUNT)) / 60;
 
-  <div class="section">
-    <h2>Export Outputs</h2>
-    <div class="button-row">
-      <button type="button" onclick="downloadWeeklyCSV()">Download Weekly Schedule</button>
-      <button type="button" onclick="downloadDailyCSV()">Download Daily Schedule</button>
-      <button type="button" onclick="downloadCoverageCSV()">Download Coverage Summary</button>
-    </div>
-  </div>
+let weeklyMatrixRows = [];
+let intervalList = [];
+let dayDemandMap = {};
+let generatedAgents = [];
+let dailyDetailedRows = [];
+let weeklyRosterRows = [];
+let coverageRows = [];
+let gapRows = [];
+let weeklySummary = null;
 
-  <script>
-    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const SHIFT_MIN = 9 * 60;
-    const LUNCH_MIN = 60;
-    const BREAK_MIN = 15;
-    const BREAK_COUNT = 2;
-    const PRODUCTIVE_HOURS_PER_DAY = (SHIFT_MIN - LUNCH_MIN - (BREAK_MIN * BREAK_COUNT)) / 60;
+let dailyTotalsChart = null;
+let gapChart = null;
+let startDistChart = null;
 
-    let weeklyMatrixRows = [];
-    let intervalList = [];
-    let dayDemandMap = {};
-    let generatedAgents = [];
-    let dailyDetailedRows = [];
-    let weeklyRosterRows = [];
-    let coverageRows = [];
-    let gapRows = [];
-    let weeklySummary = null;
+function parseTimeToMin(str) {
+  if (!str || !String(str).includes(":")) return 0;
+  const [h, m] = String(str).split(":").map(Number);
+  return (h * 60) + m;
+}
 
-    let dailyTotalsChart = null;
-    let gapChart = null;
-    let startDistChart = null;
+function formatMinToTime(mins) {
+  let m = Math.round(mins) % 1440;
+  if (m < 0) m += 1440;
+  const hh = String(Math.floor(m / 60)).padStart(2, "0");
+  const mm = String(m % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
 
-    function parseTimeToMin(str) {
-      if (!str || !String(str).includes(":")) return 0;
-      const [h, m] = String(str).split(":").map(Number);
-      return (h * 60) + m;
-    }
+function getSegments(startMin, durationMin) {
+  const s = ((startMin % 1440) + 1440) % 1440;
+  const end = s + durationMin;
+  if (end <= 1440) return [[s, end]];
+  return [[s, 1440], [0, end - 1440]];
+}
 
-    function formatMinToTime(mins) {
-      let m = Math.round(mins) % 1440;
-      if (m < 0) m += 1440;
-      const hh = String(Math.floor(m / 60)).padStart(2, "0");
-      const mm = String(m % 60).padStart(2, "0");
-      return `${hh}:${mm}`;
-    }
+function overlapMinutes(segAStart, segAEnd, segBStart, segBEnd) {
+  return Math.max(0, Math.min(segAEnd, segBEnd) - Math.max(segAStart, segBStart));
+}
 
-    function getOpenDayMask(cfg) {
-      const mask = Array(7).fill(false);
-      for (let i = 0; i < Math.min(7, cfg.operatingDays); i++) {
-        mask[i] = true;
-      }
-      return mask;
-    }
+function overlapDuration(startA, durA, startB, durB) {
+  const aSegs = getSegments(startA, durA);
+  const bSegs = getSegments(startB, durB);
+  let total = 0;
 
-    function isDayOpen(dayIndex, cfg) {
-      return dayIndex >= 0 && dayIndex < cfg.operatingDays;
-    }
-
-    function updateDerivedDisplays() {
-      const operatingDays = Number(document.getElementById("operatingDays").value);
-      const selectedWorkingDays = Number(document.getElementById("workingDays").value);
-      const effectiveWorkingDays = Math.min(selectedWorkingDays, operatingDays);
-      const offDaysWithinOpenDays = Math.max(0, operatingDays - effectiveWorkingDays);
-      document.getElementById("offDaysDisplay").innerText = String(offDaysWithinOpenDays);
-
-      const hoopStart = parseTimeToMin(document.getElementById("hoopStart").value);
-      const opHours = Number(document.getElementById("operatingHours").value);
-      document.getElementById("hoopEndDisplay").innerText = formatMinToTime(hoopStart + (opHours * 60));
-
-      togglePlanningMode();
-    }
-
-    function togglePlanningMode() {
-      const mode = document.getElementById("planningMode").value;
-      const wrapper = document.getElementById("availableHcWrapper");
-      const title = document.getElementById("kpiTargetTitle");
-      const note = document.getElementById("kpiTargetNote");
-
-      if (mode === "fixed") {
-        wrapper.classList.remove("hidden");
-        title.innerText = "Available HC";
-        note.innerText = "Uses the HC you already have and builds the best schedule possible.";
-      } else {
-        wrapper.classList.add("hidden");
-        title.innerText = "Suggested HC Target";
-        note.innerText = "Base HC vs peak HC with small planning buffer.";
-      }
-    }
-
-    ["operatingDays","workingDays", "hoopStart", "operatingHours", "planningMode"].forEach(id => {
-      document.getElementById(id).addEventListener("change", updateDerivedDisplays);
+  aSegs.forEach(a => {
+    bSegs.forEach(b => {
+      total += overlapMinutes(a[0], a[1], b[0], b[1]);
     });
-    updateDerivedDisplays();
+  });
+  return total;
+}
 
-    function downloadTextFile(content, fileName, mimeType) {
-      const blob = new Blob([content], { type: mimeType });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
+function overlapAbsoluteDuration(startA, durA, startB, durB) {
+  const endA = startA + durA;
+  const endB = startB + durB;
+  return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB));
+}
 
-    function downloadSampleTemplate() {
-      const csv =
+function getOpenDayMask(cfg) {
+  const mask = Array(7).fill(false);
+  for (let i = 0; i < Math.min(7, cfg.operatingDays); i++) {
+    mask[i] = true;
+  }
+  return mask;
+}
+
+function isDayOpen(dayIndex, cfg) {
+  return dayIndex >= 0 && dayIndex < cfg.operatingDays;
+}
+
+function updateDerivedDisplays() {
+  const operatingDays = Number(document.getElementById("operatingDays").value);
+  const selectedWorkingDays = Number(document.getElementById("workingDays").value);
+  const effectiveWorkingDays = Math.min(selectedWorkingDays, operatingDays);
+  const offDaysWithinOpenDays = Math.max(0, operatingDays - effectiveWorkingDays);
+  document.getElementById("offDaysDisplay").innerText = String(offDaysWithinOpenDays);
+
+  const hoopStart = parseTimeToMin(document.getElementById("hoopStart").value);
+  const opHours = Number(document.getElementById("operatingHours").value);
+  document.getElementById("hoopEndDisplay").innerText = formatMinToTime(hoopStart + (opHours * 60));
+
+  togglePlanningMode();
+}
+
+function togglePlanningMode() {
+  const mode = document.getElementById("planningMode").value;
+  const wrapper = document.getElementById("availableHcWrapper");
+  const title = document.getElementById("kpiTargetTitle");
+  const note = document.getElementById("kpiTargetNote");
+
+  if (mode === "fixed") {
+    wrapper.classList.remove("hidden");
+    title.innerText = "Available HC";
+    note.innerText = "Uses the HC you already have and builds the best schedule possible.";
+  } else {
+    wrapper.classList.add("hidden");
+    title.innerText = "Suggested HC Target";
+    note.innerText = "Base HC vs peak HC with small planning buffer.";
+  }
+}
+
+["operatingDays", "workingDays", "hoopStart", "operatingHours", "planningMode"].forEach(id => {
+  document.getElementById(id).addEventListener("change", updateDerivedDisplays);
+});
+updateDerivedDisplays();
+
+function downloadTextFile(content, fileName, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function downloadSampleTemplate() {
+  const csv =
 `Interval,Mon,Tue,Wed,Thu,Fri,Sat,Sun
 00:00,12,12,12,12,12,12,12
 01:00,10,10,10,10,10,10,10
@@ -682,811 +712,817 @@
 21:00,22,22,22,22,22,22,22
 22:00,18,18,18,18,18,18,18
 23:00,14,14,14,14,14,14,14`;
-      downloadTextFile(csv, "schedule_requirement_template.csv", "text/csv");
+  downloadTextFile(csv, "schedule_requirement_template.csv", "text/csv");
+}
+
+function buildConfig() {
+  const operatingDays = Number(document.getElementById("operatingDays").value);
+  const selectedWorkingDays = Number(document.getElementById("workingDays").value);
+  return {
+    planningMode: document.getElementById("planningMode").value,
+    availableHC: Number(document.getElementById("availableHC").value || 0),
+    intervalSize: Number(document.getElementById("intervalSize").value),
+    operatingHours: Number(document.getElementById("operatingHours").value),
+    operatingDays,
+    workingDays: Math.min(selectedWorkingDays, operatingDays),
+    selectedWorkingDays,
+    weekOffPattern: document.getElementById("weekOffPattern").value,
+    hoopStart: parseTimeToMin(document.getElementById("hoopStart").value),
+    earliestStart: parseTimeToMin(document.getElementById("earliestStart").value),
+    latestEnd: parseTimeToMin(document.getElementById("latestEnd").value),
+    startInterval: Number(document.getElementById("startInterval").value),
+    peakProtection: document.getElementById("peakProtection").value,
+    shoulderProtection: document.getElementById("shoulderProtection").value,
+    mealOffsetHours: Number(document.getElementById("mealOffset").value),
+    staggerGap: Number(document.getElementById("staggerGap").value)
+  };
+}
+
+function getProtectionConfig(cfg) {
+  const peakMap = {
+    strict: 0.90,
+    moderate: 0.85,
+    flexible: 0.80
+  };
+
+  const shoulderMap = {
+    strict: 1.10,
+    moderate: 1.20,
+    flexible: 1.30
+  };
+
+  return {
+    peakThreshold: peakMap[cfg.peakProtection] ?? 0.85,
+    shoulderMax: shoulderMap[cfg.shoulderProtection] ?? 1.20
+  };
+}
+
+function normalizeWideRow(r) {
+  return {
+    Interval: String(r.Interval ?? r.interval ?? r.TIME ?? r.Time ?? "").trim(),
+    Mon: Number(r.Mon ?? r.MON ?? r.monday ?? r.Monday ?? 0),
+    Tue: Number(r.Tue ?? r.TUE ?? r.tuesday ?? r.Tuesday ?? 0),
+    Wed: Number(r.Wed ?? r.WED ?? r.wednesday ?? r.Wednesday ?? 0),
+    Thu: Number(r.Thu ?? r.THU ?? r.thursday ?? r.Thursday ?? 0),
+    Fri: Number(r.Fri ?? r.FRI ?? r.friday ?? r.Friday ?? 0),
+    Sat: Number(r.Sat ?? r.SAT ?? r.saturday ?? r.Saturday ?? 0),
+    Sun: Number(r.Sun ?? r.SUN ?? r.sunday ?? r.Sunday ?? 0)
+  };
+}
+
+function parseUploadedRows(rows) {
+  const parsed = rows
+    .map(normalizeWideRow)
+    .filter(r => r.Interval && DAYS.every(d => !Number.isNaN(r[d])));
+
+  parsed.sort((a, b) => parseTimeToMin(a.Interval) - parseTimeToMin(b.Interval));
+
+  weeklyMatrixRows = parsed;
+  intervalList = weeklyMatrixRows.map(r => r.Interval);
+  dayDemandMap = {};
+
+  DAYS.forEach(day => {
+    dayDemandMap[day] = weeklyMatrixRows.map(r => r[day]);
+  });
+
+  populateRequirementTable();
+
+  document.getElementById("uploadStatus").innerText =
+    weeklyMatrixRows.length
+      ? `File uploaded successfully. ${weeklyMatrixRows.length} intervals loaded across 7 days.`
+      : "No valid rows found. Please check the file format.";
+}
+
+function populateRequirementTable() {
+  const tbody = document.querySelector("#requirementTable tbody");
+  tbody.innerHTML = "";
+
+  weeklyMatrixRows.forEach(r => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${r.Interval}</td>
+        <td>${r.Mon}</td>
+        <td>${r.Tue}</td>
+        <td>${r.Wed}</td>
+        <td>${r.Thu}</td>
+        <td>${r.Fri}</td>
+        <td>${r.Sat}</td>
+        <td>${r.Sun}</td>
+      </tr>
+    `;
+  });
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const name = file.name.toLowerCase();
+
+  if (name.endsWith(".csv")) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(res) {
+        parseUploadedRows(res.data);
+      }
+    });
+  } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+      parseUploadedRows(json);
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    alert("Please upload a CSV or Excel file.");
+  }
+}
+
+document.getElementById("fileInput").addEventListener("change", function(e) {
+  handleFile(e.target.files[0]);
+});
+
+const dropZone = document.getElementById("dropZone");
+
+dropZone.addEventListener("dragover", function(e) {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave", function() {
+  dropZone.classList.remove("dragover");
+});
+
+dropZone.addEventListener("drop", function(e) {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+  handleFile(e.dataTransfer.files[0]);
+});
+
+function getWeeklyTotals(cfg) {
+  const totals = {};
+  DAYS.forEach((day, dayIndex) => {
+    totals[day] = isDayOpen(dayIndex, cfg)
+      ? (dayDemandMap[day] || []).reduce((s, v) => s + v, 0)
+      : 0;
+  });
+  return totals;
+}
+
+function getMasterRequirement(cfg) {
+  return intervalList.map((_, idx) => {
+    let max = 0;
+    DAYS.forEach((day, dayIndex) => {
+      if (isDayOpen(dayIndex, cfg)) {
+        max = Math.max(max, dayDemandMap[day][idx] || 0);
+      }
+    });
+    return max;
+  });
+}
+
+function calculateWeeklySummary(cfg) {
+  const intervalHours = cfg.intervalSize / 60;
+  let weeklyRequiredHours = 0;
+  let peakConcurrent = 0;
+
+  weeklyMatrixRows.forEach(row => {
+    DAYS.forEach((day, dayIndex) => {
+      if (isDayOpen(dayIndex, cfg)) {
+        weeklyRequiredHours += (row[day] || 0) * intervalHours;
+        peakConcurrent = Math.max(peakConcurrent, row[day] || 0);
+      }
+    });
+  });
+
+  const productiveHoursPerWeek = PRODUCTIVE_HOURS_PER_DAY * cfg.workingDays;
+  const baseHC = productiveHoursPerWeek > 0 ? weeklyRequiredHours / productiveHoursPerWeek : 0;
+  const suggestedTarget = Math.ceil(Math.max(baseHC, peakConcurrent) * 1.05);
+
+  return {
+    weeklyRequiredHours: Number(weeklyRequiredHours.toFixed(2)),
+    productiveHoursPerWeek: Number(productiveHoursPerWeek.toFixed(2)),
+    baseHC: Number(baseHC.toFixed(2)),
+    peakConcurrent,
+    suggestedTarget
+  };
+}
+
+function renderWeeklySummary(cfg, generatedHC) {
+  if (!weeklySummary) return;
+
+  document.getElementById("kpiWeeklyHours").innerText = weeklySummary.weeklyRequiredHours;
+  document.getElementById("kpiProdHours").innerText = weeklySummary.productiveHoursPerWeek;
+  document.getElementById("kpiBaseHC").innerText = weeklySummary.baseHC;
+  document.getElementById("kpiPeakHC").innerText = weeklySummary.peakConcurrent;
+
+  if (cfg.planningMode === "fixed") {
+    document.getElementById("kpiTargetHC").innerText = cfg.availableHC || 0;
+  } else {
+    document.getElementById("kpiTargetHC").innerText = weeklySummary.suggestedTarget;
+  }
+
+  document.getElementById("kpiGeneratedHC").innerText = generatedHC;
+}
+
+function generateCandidateStarts(cfg) {
+  const starts = [];
+  const step = cfg.startInterval;
+
+  let latestEndAbs = cfg.latestEnd;
+  if (cfg.latestEnd <= cfg.earliestStart) {
+    latestEndAbs += 1440;
+  }
+
+  const earliestStartAbs = cfg.earliestStart;
+  const latestStartAbs = latestEndAbs - SHIFT_MIN;
+
+  let current = earliestStartAbs;
+  while (current <= latestStartAbs) {
+    starts.push(current % 1440);
+    current += step;
+  }
+
+  return starts.length ? starts : [earliestStartAbs % 1440];
+}
+
+function buildDayPattern(startBase, agentIndex, dayIndex, cfg) {
+  const offsetStep = cfg.staggerGap;
+  const offset = ((agentIndex + dayIndex) % 3) * offsetStep;
+
+  const shiftStart = startBase;
+  const shiftEnd = startBase + SHIFT_MIN;
+
+  let break1 = shiftStart + 120 + offset;
+  let lunch = shiftStart + (cfg.mealOffsetHours * 60) + offset;
+  let break2 = shiftStart + 420 + offset;
+
+  const latestLunchStart = shiftStart + SHIFT_MIN - 150;
+  const earliestLunchStart = shiftStart + 180;
+
+  lunch = Math.max(earliestLunchStart, Math.min(lunch, latestLunchStart));
+
+  const latestBreak1 = lunch - BREAK_MIN - 15;
+  break1 = Math.max(shiftStart + 60, Math.min(break1, latestBreak1));
+
+  const earliestBreak2 = lunch + LUNCH_MIN + 60;
+  const latestBreak2 = shiftStart + SHIFT_MIN - BREAK_MIN - 30;
+  break2 = Math.max(earliestBreak2, Math.min(break2, latestBreak2));
+
+  return {
+    start: shiftStart,
+    end: shiftEnd,
+    lunchStart: lunch,
+    break1Start: break1,
+    break2Start: break2
+  };
+}
+
+function intervalContribution(pattern, intervalStart, intervalSize) {
+  const scheduledOverlap = overlapDuration(pattern.start, SHIFT_MIN, intervalStart, intervalSize);
+  const scheduled = scheduledOverlap > 0 ? 1 : 0;
+
+  const lunchLoss = overlapDuration(pattern.lunchStart, LUNCH_MIN, intervalStart, intervalSize) / intervalSize;
+  const break1Loss = overlapDuration(pattern.break1Start, BREAK_MIN, intervalStart, intervalSize) / intervalSize;
+  const break2Loss = overlapDuration(pattern.break2Start, BREAK_MIN, intervalStart, intervalSize) / intervalSize;
+
+  let productive = scheduled - lunchLoss - break1Loss - break2Loss;
+  productive = Math.max(0, Math.min(1, productive));
+
+  return { scheduled, productive };
+}
+
+function getIntervalAbs(dayIndex, intervalMin) {
+  return (dayIndex * 1440) + intervalMin;
+}
+
+function generateBaseAgents(cfg, targetHC) {
+  const protect = getProtectionConfig(cfg);
+  const masterRequired = getMasterRequirement(cfg);
+  const intervalStarts = intervalList.map(i => parseTimeToMin(i));
+  const maxRequired = Math.max(...masterRequired);
+  const peakFlags = masterRequired.map(v => v >= (maxRequired * protect.peakThreshold));
+  const candidateStarts = generateCandidateStarts(cfg);
+
+  const productiveCoverage = Array(masterRequired.length).fill(0);
+  generatedAgents = [];
+
+  for (let agentNo = 0; agentNo < targetHC; agentNo++) {
+    let best = null;
+
+    candidateStarts.forEach(startClockMin => {
+      const tempPattern = buildDayPattern(startClockMin, agentNo, 0, cfg);
+      let score = 0;
+
+      for (let i = 0; i < intervalStarts.length; i++) {
+        const contrib = intervalContribution(tempPattern, intervalStarts[i], cfg.intervalSize);
+        const gap = Math.max(0, masterRequired[i] - productiveCoverage[i]);
+
+        score += Math.min(gap, contrib.productive) * 12;
+
+        if (peakFlags[i]) {
+          const nonProd = contrib.scheduled - contrib.productive;
+          score -= nonProd * 8;
+        }
+
+        const projected = productiveCoverage[i] + contrib.productive;
+        const shoulderCap = masterRequired[i] * protect.shoulderMax;
+        if (projected > shoulderCap) {
+          score -= (projected - shoulderCap) * 5;
+        }
+      }
+
+      const peakCenterIndex = masterRequired.indexOf(maxRequired);
+      const peakCenterMin = intervalStarts[peakCenterIndex];
+      const idealStart = peakCenterMin - 240;
+      const dist = Math.abs(startClockMin - idealStart);
+      score -= dist / 5000;
+
+      if (!best || score > best.score) {
+        best = { startClockMin, score, pattern: tempPattern };
+      }
+    });
+
+    const chosen = best ? best.pattern : buildDayPattern(cfg.earliestStart, agentNo, 0, cfg);
+
+    generatedAgents.push({
+      agent: `Agent ${agentNo + 1}`,
+      startClockMin: chosen.start % 1440,
+      workMask: Array(7).fill(true)
+    });
+
+    for (let i = 0; i < intervalStarts.length; i++) {
+      const contrib = intervalContribution(chosen, intervalStarts[i], cfg.intervalSize);
+      productiveCoverage[i] += contrib.productive;
     }
+  }
+}
 
-    function buildConfig() {
-      const operatingDays = Number(document.getElementById("operatingDays").value);
-      const selectedWorkingDays = Number(document.getElementById("workingDays").value);
-      return {
-        planningMode: document.getElementById("planningMode").value,
-        availableHC: Number(document.getElementById("availableHC").value || 0),
-        intervalSize: Number(document.getElementById("intervalSize").value),
-        operatingHours: Number(document.getElementById("operatingHours").value),
-        operatingDays,
-        workingDays: Math.min(selectedWorkingDays, operatingDays),
-        selectedWorkingDays,
-        weekOffPattern: document.getElementById("weekOffPattern").value,
-        hoopStart: parseTimeToMin(document.getElementById("hoopStart").value),
-        earliestStart: parseTimeToMin(document.getElementById("earliestStart").value),
-        latestEnd: parseTimeToMin(document.getElementById("latestEnd").value),
-        startInterval: Number(document.getElementById("startInterval").value),
-        peakProtection: document.getElementById("peakProtection").value,
-        shoulderProtection: document.getElementById("shoulderProtection").value,
-        mealOffsetHours: Number(document.getElementById("mealOffset").value),
-        staggerGap: Number(document.getElementById("staggerGap").value)
-      };
+function generateOffDayCombos(offDays, pattern, dayTotals, cfg) {
+  const openDayIndices = DAYS.map((_, idx) => idx).filter(idx => isDayOpen(idx, cfg));
+
+  if (offDays <= 0) return [[]];
+
+  let combos = [];
+
+  if (offDays === 1) {
+    combos = openDayIndices.map(i => [i]);
+  } else if (offDays === 2) {
+    if (pattern === "continuous") {
+      for (let i = 0; i < openDayIndices.length - 1; i++) {
+        combos.push([openDayIndices[i], openDayIndices[i + 1]]);
+      }
+    } else if (pattern === "split") {
+      for (let i = 0; i < openDayIndices.length; i++) {
+        for (let j = i + 1; j < openDayIndices.length; j++) {
+          const dayA = openDayIndices[i];
+          const dayB = openDayIndices[j];
+          const isContinuous = (dayB === dayA + 1);
+          if (!isContinuous) combos.push([dayA, dayB]);
+        }
+      }
+    } else {
+      const continuous = [];
+      for (let i = 0; i < openDayIndices.length - 1; i++) {
+        continuous.push([openDayIndices[i], openDayIndices[i + 1]]);
+      }
+      const split = [];
+      for (let i = 0; i < openDayIndices.length; i++) {
+        for (let j = i + 1; j < openDayIndices.length; j++) {
+          const dayA = openDayIndices[i];
+          const dayB = openDayIndices[j];
+          const isContinuous = (dayB === dayA + 1);
+          if (!isContinuous) split.push([dayA, dayB]);
+        }
+      }
+      combos = continuous.concat(split);
     }
+  } else {
+    combos = [[]];
+  }
 
-    function getProtectionConfig(cfg) {
-      const peakMap = {
-        strict: 0.90,
-        moderate: 0.85,
-        flexible: 0.80
-      };
+  if (!combos.length) combos = [[]];
 
-      const shoulderMap = {
-        strict: 1.10,
-        moderate: 1.20,
-        flexible: 1.30
-      };
+  combos = combos.map(c => ({
+    days: c,
+    score: c.reduce((s, d) => s + (dayTotals[DAYS[d]] || 0), 0)
+  }));
 
-      return {
-        peakThreshold: peakMap[cfg.peakProtection] ?? 0.85,
-        shoulderMax: shoulderMap[cfg.shoulderProtection] ?? 1.20
-      };
-    }
+  combos.sort((a, b) => a.score - b.score);
+  return combos.map(c => c.days);
+}
 
-    function normalizeWideRow(r) {
-      return {
-        Interval: String(r.Interval ?? r.interval ?? r.TIME ?? r.Time ?? "").trim(),
-        Mon: Number(r.Mon ?? r.MON ?? r.monday ?? r.Monday ?? 0),
-        Tue: Number(r.Tue ?? r.TUE ?? r.tuesday ?? r.Tuesday ?? 0),
-        Wed: Number(r.Wed ?? r.WED ?? r.wednesday ?? r.Wednesday ?? 0),
-        Thu: Number(r.Thu ?? r.THU ?? r.thursday ?? r.Thursday ?? 0),
-        Fri: Number(r.Fri ?? r.FRI ?? r.friday ?? r.Friday ?? 0),
-        Sat: Number(r.Sat ?? r.SAT ?? r.saturday ?? r.Saturday ?? 0),
-        Sun: Number(r.Sun ?? r.SUN ?? r.sunday ?? r.Sunday ?? 0)
-      };
-    }
+function assignOffDays(cfg) {
+  const openDayCount = cfg.operatingDays;
+  const offDays = Math.max(0, openDayCount - cfg.workingDays);
+  const dayTotals = getWeeklyTotals(cfg);
+  const openMask = getOpenDayMask(cfg);
 
-    function parseUploadedRows(rows) {
-      const parsed = rows
-        .map(normalizeWideRow)
-        .filter(r => r.Interval && DAYS.every(d => !Number.isNaN(r[d])));
+  generatedAgents.forEach(agent => {
+    agent.workMask = openMask.slice();
+  });
 
-      parsed.sort((a, b) => parseTimeToMin(a.Interval) - parseTimeToMin(b.Interval));
+  if (offDays <= 0) return;
 
-      weeklyMatrixRows = parsed;
-      intervalList = weeklyMatrixRows.map(r => r.Interval);
-      dayDemandMap = {};
+  const combos = generateOffDayCombos(offDays, cfg.weekOffPattern, dayTotals, cfg);
+  const offAssigned = Array(7).fill(0);
+  const avgDemand = Object.values(dayTotals).reduce((s, v) => s + v, 0) / Math.max(1, cfg.operatingDays);
 
-      DAYS.forEach(day => {
-        dayDemandMap[day] = weeklyMatrixRows.map(r => r[day]);
+  generatedAgents.forEach(agent => {
+    let bestCombo = combos[0];
+    let bestScore = Infinity;
+
+    combos.forEach(combo => {
+      let score = 0;
+      combo.forEach(dayIndex => {
+        score += dayTotals[DAYS[dayIndex]] || 0;
+        score += offAssigned[dayIndex] * avgDemand * 0.2;
       });
 
-      populateRequirementTable();
+      if (score < bestScore) {
+        bestScore = score;
+        bestCombo = combo;
+      }
+    });
 
-      document.getElementById("uploadStatus").innerText =
-        weeklyMatrixRows.length
-          ? `File uploaded successfully. ${weeklyMatrixRows.length} intervals loaded across 7 days.`
-          : "No valid rows found. Please check the file format.";
-    }
+    bestCombo.forEach(dayIndex => {
+      agent.workMask[dayIndex] = false;
+      offAssigned[dayIndex] += 1;
+    });
+  });
+}
 
-    function populateRequirementTable() {
-      const tbody = document.querySelector("#requirementTable tbody");
-      tbody.innerHTML = "";
+function buildDailyAndWeeklyOutputs(cfg) {
+  const dailyTbody = document.querySelector("#dailyScheduleTable tbody");
+  const weeklyTbody = document.querySelector("#weeklyRosterTable tbody");
+  dailyTbody.innerHTML = "";
+  weeklyTbody.innerHTML = "";
 
-      weeklyMatrixRows.forEach(r => {
-        tbody.innerHTML += `
+  dailyDetailedRows = [];
+  weeklyRosterRows = [];
+
+  generatedAgents.forEach((a, idx) => {
+    const row = { Agent: a.agent };
+    let weeklyHtml = `<tr><td>${a.agent}</td>`;
+
+    DAYS.forEach((day, dayIndex) => {
+      if (!isDayOpen(dayIndex, cfg)) {
+        row[day] = "OFF";
+        weeklyHtml += `<td>OFF</td>`;
+        return;
+      }
+
+      if (a.workMask[dayIndex]) {
+        const startAbs = (dayIndex * 1440) + a.startClockMin;
+        const val = `${formatMinToTime(startAbs)}-${formatMinToTime(startAbs + SHIFT_MIN)}`;
+        row[day] = val;
+        weeklyHtml += `<td>${val}</td>`;
+
+        const p = buildDayPattern(startAbs, idx, dayIndex, cfg);
+        dailyDetailedRows.push({
+          Agent: a.agent,
+          Day: day,
+          Start: formatMinToTime(p.start),
+          End: formatMinToTime(p.end),
+          Meal: formatMinToTime(p.lunchStart),
+          "Break 1": formatMinToTime(p.break1Start),
+          "Break 2": formatMinToTime(p.break2Start)
+        });
+
+        dailyTbody.innerHTML += `
           <tr>
-            <td>${r.Interval}</td>
-            <td>${r.Mon}</td>
-            <td>${r.Tue}</td>
-            <td>${r.Wed}</td>
-            <td>${r.Thu}</td>
-            <td>${r.Fri}</td>
-            <td>${r.Sat}</td>
-            <td>${r.Sun}</td>
+            <td>${a.agent}</td>
+            <td>${day}</td>
+            <td>${formatMinToTime(p.start)}</td>
+            <td>${formatMinToTime(p.end)}</td>
+            <td>${formatMinToTime(p.lunchStart)}</td>
+            <td>${formatMinToTime(p.break1Start)}</td>
+            <td>${formatMinToTime(p.break2Start)}</td>
           </tr>
         `;
-      });
-    }
-
-    function handleFile(file) {
-      if (!file) return;
-      const name = file.name.toLowerCase();
-
-      if (name.endsWith(".csv")) {
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          complete: function(res) {
-            parseUploadedRows(res.data);
-          }
-        });
-      } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet);
-          parseUploadedRows(json);
-        };
-        reader.readAsArrayBuffer(file);
       } else {
-        alert("Please upload a CSV or Excel file.");
+        row[day] = "OFF";
+        weeklyHtml += `<td>OFF</td>`;
       }
-    }
-
-    document.getElementById("fileInput").addEventListener("change", function(e) {
-      handleFile(e.target.files[0]);
     });
 
-    const dropZone = document.getElementById("dropZone");
+    weeklyHtml += `</tr>`;
+    weeklyTbody.innerHTML += weeklyHtml;
+    weeklyRosterRows.push(row);
+  });
+}
 
-    dropZone.addEventListener("dragover", function(e) {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
-    });
+function buildCoverageOutputs(cfg) {
+  const covTbody = document.querySelector("#coverageTable tbody");
+  const gapTbody = document.querySelector("#gapTable tbody");
+  covTbody.innerHTML = "";
+  gapTbody.innerHTML = "";
 
-    dropZone.addEventListener("dragleave", function() {
-      dropZone.classList.remove("dragover");
-    });
+  coverageRows = [];
+  gapRows = [];
 
-    dropZone.addEventListener("drop", function(e) {
-      e.preventDefault();
-      dropZone.classList.remove("dragover");
-      handleFile(e.dataTransfer.files[0]);
-    });
+  const intervalStarts = intervalList.map(i => parseTimeToMin(i));
 
-    function getWeeklyTotals(cfg) {
-      const totals = {};
-      DAYS.forEach((day, dayIndex) => {
-        totals[day] = isDayOpen(dayIndex, cfg)
-          ? (dayDemandMap[day] || []).reduce((s, v) => s + v, 0)
-          : 0;
-      });
-      return totals;
-    }
+  DAYS.forEach((day, dayIndex) => {
+    if (!isDayOpen(dayIndex, cfg)) return;
 
-    function getMasterRequirement(cfg) {
-      return intervalList.map((_, idx) => {
-        let max = 0;
-        DAYS.forEach((day, dayIndex) => {
-          if (isDayOpen(dayIndex, cfg)) {
-            max = Math.max(max, dayDemandMap[day][idx] || 0);
-          }
-        });
-        return max;
-      });
-    }
+    for (let i = 0; i < intervalList.length; i++) {
+      const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
+      const required = dayDemandMap[day][i] || 0;
 
-    function calculateWeeklySummary(cfg) {
-      const intervalHours = cfg.intervalSize / 60;
-      let weeklyRequiredHours = 0;
-      let peakConcurrent = 0;
+      let scheduled = 0;
+      let productive = 0;
 
-      weeklyMatrixRows.forEach(row => {
-        DAYS.forEach((day, dayIndex) => {
-          if (isDayOpen(dayIndex, cfg)) {
-            weeklyRequiredHours += (row[day] || 0) * intervalHours;
-            peakConcurrent = Math.max(peakConcurrent, row[day] || 0);
-          }
-        });
-      });
+      generatedAgents.forEach((a, agentIndex) => {
+        for (let workDayIndex = 0; workDayIndex < 7; workDayIndex++) {
+          if (!isDayOpen(workDayIndex, cfg)) continue;
+          if (!a.workMask[workDayIndex]) continue;
 
-      const productiveHoursPerWeek = PRODUCTIVE_HOURS_PER_DAY * cfg.workingDays;
-      const baseHC = productiveHoursPerWeek > 0 ? weeklyRequiredHours / productiveHoursPerWeek : 0;
-      const suggestedTarget = Math.ceil(Math.max(baseHC, peakConcurrent) * 1.05);
+          const shiftStartAbs = (workDayIndex * 1440) + a.startClockMin;
+          const p = buildDayPattern(shiftStartAbs, agentIndex, workDayIndex, cfg);
 
-      return {
-        weeklyRequiredHours: Number(weeklyRequiredHours.toFixed(2)),
-        productiveHoursPerWeek: Number(productiveHoursPerWeek.toFixed(2)),
-        baseHC: Number(baseHC.toFixed(2)),
-        peakConcurrent,
-        suggestedTarget
-      };
-    }
+          const scheduledOverlap = overlapAbsoluteDuration(shiftStartAbs, SHIFT_MIN, intervalStartAbs, cfg.intervalSize);
+          const isScheduled = scheduledOverlap > 0 ? 1 : 0;
 
-    function renderWeeklySummary(cfg, generatedHC) {
-      if (!weeklySummary) return;
+          const lunchLoss = overlapAbsoluteDuration(p.lunchStart, LUNCH_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+          const break1Loss = overlapAbsoluteDuration(p.break1Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+          const break2Loss = overlapAbsoluteDuration(p.break2Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
 
-      document.getElementById("kpiWeeklyHours").innerText = weeklySummary.weeklyRequiredHours;
-      document.getElementById("kpiProdHours").innerText = weeklySummary.productiveHoursPerWeek;
-      document.getElementById("kpiBaseHC").innerText = weeklySummary.baseHC;
-      document.getElementById("kpiPeakHC").innerText = weeklySummary.peakConcurrent;
+          let productivePart = isScheduled - lunchLoss - break1Loss - break2Loss;
+          productivePart = Math.max(0, Math.min(1, productivePart));
 
-      if (cfg.planningMode === "fixed") {
-        document.getElementById("kpiTargetHC").innerText = cfg.availableHC || 0;
-      } else {
-        document.getElementById("kpiTargetHC").innerText = weeklySummary.suggestedTarget;
-      }
-
-      document.getElementById("kpiGeneratedHC").innerText = generatedHC;
-    }
-
-    function generateCandidateStarts(cfg) {
-      const starts = [];
-      const step = cfg.startInterval;
-
-      let latestEndAbs = cfg.latestEnd;
-      if (cfg.latestEnd <= cfg.earliestStart) {
-        latestEndAbs += 1440;
-      }
-
-      const earliestStartAbs = cfg.earliestStart;
-      const latestStartAbs = latestEndAbs - SHIFT_MIN;
-
-      let current = earliestStartAbs;
-      while (current <= latestStartAbs) {
-        starts.push(current);
-        current += step;
-      }
-
-      return starts.length ? starts : [earliestStartAbs];
-    }
-
-    function buildDayPattern(startAbs, agentIndex, dayIndex, cfg) {
-      const offsetStep = cfg.staggerGap;
-      const offset = ((agentIndex + dayIndex) % 3) * offsetStep;
-
-      const shiftStart = startAbs;
-      const shiftEnd = startAbs + SHIFT_MIN;
-
-      let break1 = shiftStart + 120 + offset;
-      let lunch = shiftStart + (cfg.mealOffsetHours * 60) + offset;
-      let break2 = shiftStart + 420 + offset;
-
-      const latestLunchStart = shiftStart + SHIFT_MIN - 150;
-      const earliestLunchStart = shiftStart + 180;
-
-      lunch = Math.max(earliestLunchStart, Math.min(lunch, latestLunchStart));
-
-      const latestBreak1 = lunch - BREAK_MIN - 15;
-      break1 = Math.max(shiftStart + 60, Math.min(break1, latestBreak1));
-
-      const earliestBreak2 = lunch + LUNCH_MIN + 60;
-      const latestBreak2 = shiftStart + SHIFT_MIN - BREAK_MIN - 30;
-      break2 = Math.max(earliestBreak2, Math.min(break2, latestBreak2));
-
-      return {
-        start: shiftStart,
-        end: shiftEnd,
-        lunchStart: lunch,
-        break1Start: break1,
-        break2Start: break2
-      };
-    }
-
-    function intervalContribution(pattern, intervalStartAbs, intervalSize) {
-      const scheduledOverlap = overlapDuration(pattern.start, SHIFT_MIN, intervalStartAbs, intervalSize);
-      const scheduled = scheduledOverlap > 0 ? 1 : 0;
-
-      const lunchLoss = overlapDuration(pattern.lunchStart, LUNCH_MIN, intervalStartAbs, intervalSize) / intervalSize;
-      const break1Loss = overlapDuration(pattern.break1Start, BREAK_MIN, intervalStartAbs, intervalSize) / intervalSize;
-      const break2Loss = overlapDuration(pattern.break2Start, BREAK_MIN, intervalStartAbs, intervalSize) / intervalSize;
-
-      let productive = scheduled - lunchLoss - break1Loss - break2Loss;
-      productive = Math.max(0, Math.min(1, productive));
-
-      return { scheduled, productive };
-    }
-
-    function getIntervalAbs(dayIndex, intervalMin) {
-      return (dayIndex * 1440) + intervalMin;
-    }
-
-    function generateBaseAgents(cfg, targetHC) {
-      const protect = getProtectionConfig(cfg);
-      const masterRequired = getMasterRequirement(cfg);
-      const intervalStarts = intervalList.map(i => parseTimeToMin(i));
-      const maxRequired = Math.max(...masterRequired);
-      const peakFlags = masterRequired.map(v => v >= (maxRequired * protect.peakThreshold));
-      const candidateStarts = generateCandidateStarts(cfg);
-
-      const productiveCoverage = Array(masterRequired.length).fill(0);
-      generatedAgents = [];
-
-      for (let agentNo = 0; agentNo < targetHC; agentNo++) {
-        let best = null;
-
-        candidateStarts.forEach(startAbs => {
-          const tempPattern = buildDayPattern(startAbs, agentNo, 0, cfg);
-          let score = 0;
-
-          for (let i = 0; i < intervalStarts.length; i++) {
-            const contrib = intervalContribution(tempPattern, intervalStarts[i], cfg.intervalSize);
-            const gap = Math.max(0, masterRequired[i] - productiveCoverage[i]);
-
-            score += Math.min(gap, contrib.productive) * 12;
-
-            if (peakFlags[i]) {
-              const nonProd = contrib.scheduled - contrib.productive;
-              score -= nonProd * 8;
-            }
-
-            const projected = productiveCoverage[i] + contrib.productive;
-            const shoulderCap = masterRequired[i] * protect.shoulderMax;
-            if (projected > shoulderCap) {
-              score -= (projected - shoulderCap) * 5;
-            }
-          }
-
-          const peakCenterIndex = masterRequired.indexOf(maxRequired);
-          const peakCenterMin = intervalStarts[peakCenterIndex];
-          const idealStart = peakCenterMin - 240;
-          const dist = Math.abs((startAbs % 1440) - idealStart);
-          score -= dist / 5000;
-
-          if (!best || score > best.score) {
-            best = { startAbs, score, pattern: tempPattern };
-          }
-        });
-
-        const chosen = best ? best.pattern : buildDayPattern(cfg.earliestStart, agentNo, 0, cfg);
-
-        generatedAgents.push({
-          agent: `Agent ${agentNo + 1}`,
-          startAbs: chosen.start,
-          endAbs: chosen.end,
-          startLabel: formatMinToTime(chosen.start),
-          endLabel: formatMinToTime(chosen.end),
-          workMask: Array(7).fill(true)
-        });
-
-        for (let i = 0; i < intervalStarts.length; i++) {
-          const contrib = intervalContribution(chosen, intervalStarts[i], cfg.intervalSize);
-          productiveCoverage[i] += contrib.productive;
-        }
-      }
-    }
-
-    function generateOffDayCombos(offDays, pattern, dayTotals, cfg) {
-      const openDayIndices = DAYS.map((_, idx) => idx).filter(idx => isDayOpen(idx, cfg));
-
-      if (offDays <= 0) return [[]];
-
-      let combos = [];
-
-      if (offDays === 1) {
-        combos = openDayIndices.map(i => [i]);
-      } else if (offDays === 2) {
-        if (pattern === "continuous") {
-          for (let i = 0; i < openDayIndices.length - 1; i++) {
-            combos.push([openDayIndices[i], openDayIndices[i + 1]]);
-          }
-        } else if (pattern === "split") {
-          for (let i = 0; i < openDayIndices.length; i++) {
-            for (let j = i + 1; j < openDayIndices.length; j++) {
-              const dayA = openDayIndices[i];
-              const dayB = openDayIndices[j];
-              const isContinuous = (dayB === dayA + 1);
-              if (!isContinuous) combos.push([dayA, dayB]);
-            }
-          }
-        } else {
-          const continuous = [];
-          for (let i = 0; i < openDayIndices.length - 1; i++) {
-            continuous.push([openDayIndices[i], openDayIndices[i + 1]]);
-          }
-          const split = [];
-          for (let i = 0; i < openDayIndices.length; i++) {
-            for (let j = i + 1; j < openDayIndices.length; j++) {
-              const dayA = openDayIndices[i];
-              const dayB = openDayIndices[j];
-              const isContinuous = (dayB === dayA + 1);
-              if (!isContinuous) split.push([dayA, dayB]);
-            }
-          }
-          combos = continuous.concat(split);
-        }
-      } else {
-        combos = [[]];
-      }
-
-      if (!combos.length) combos = [[]];
-
-      combos = combos.map(c => ({
-        days: c,
-        score: c.reduce((s, d) => s + (dayTotals[DAYS[d]] || 0), 0)
-      }));
-
-      combos.sort((a, b) => a.score - b.score);
-      return combos.map(c => c.days);
-    }
-
-    function assignOffDays(cfg) {
-      const openDayCount = cfg.operatingDays;
-      const offDays = Math.max(0, openDayCount - cfg.workingDays);
-      const dayTotals = getWeeklyTotals(cfg);
-      const openMask = getOpenDayMask(cfg);
-
-      generatedAgents.forEach(agent => {
-        agent.workMask = openMask.slice();
-      });
-
-      if (offDays <= 0) return;
-
-      const combos = generateOffDayCombos(offDays, cfg.weekOffPattern, dayTotals, cfg);
-      const offAssigned = Array(7).fill(0);
-      const avgDemand = Object.values(dayTotals).reduce((s, v) => s + v, 0) / Math.max(1, cfg.operatingDays);
-
-      generatedAgents.forEach(agent => {
-        let bestCombo = combos[0];
-        let bestScore = Infinity;
-
-        combos.forEach(combo => {
-          let score = 0;
-          combo.forEach(dayIndex => {
-            score += dayTotals[DAYS[dayIndex]] || 0;
-            score += offAssigned[dayIndex] * avgDemand * 0.2;
-          });
-
-          if (score < bestScore) {
-            bestScore = score;
-            bestCombo = combo;
-          }
-        });
-
-        bestCombo.forEach(dayIndex => {
-          agent.workMask[dayIndex] = false;
-          offAssigned[dayIndex] += 1;
-        });
-      });
-    }
-
-    function buildDailyAndWeeklyOutputs(cfg) {
-      const dailyTbody = document.querySelector("#dailyScheduleTable tbody");
-      const weeklyTbody = document.querySelector("#weeklyRosterTable tbody");
-      dailyTbody.innerHTML = "";
-      weeklyTbody.innerHTML = "";
-
-      dailyDetailedRows = [];
-      weeklyRosterRows = [];
-
-      generatedAgents.forEach((a, idx) => {
-        const row = { Agent: a.agent };
-        let weeklyHtml = `<tr><td>${a.agent}</td>`;
-
-        DAYS.forEach((day, dayIndex) => {
-          if (!isDayOpen(dayIndex, cfg)) {
-            row[day] = "OFF";
-            weeklyHtml += `<td>OFF</td>`;
-            return;
-          }
-
-          if (a.workMask[dayIndex]) {
-            const dayBase = dayIndex * 1440;
-            const shiftStartAbs = dayBase + (a.startAbs % 1440);
-            const val = `${formatMinToTime(shiftStartAbs)}-${formatMinToTime(shiftStartAbs + SHIFT_MIN)}`;
-            row[day] = val;
-            weeklyHtml += `<td>${val}</td>`;
-
-            const p = buildDayPattern(shiftStartAbs, idx, dayIndex, cfg);
-            dailyDetailedRows.push({
-              Agent: a.agent,
-              Day: day,
-              Start: formatMinToTime(p.start),
-              End: formatMinToTime(p.end),
-              Meal: formatMinToTime(p.lunchStart),
-              "Break 1": formatMinToTime(p.break1Start),
-              "Break 2": formatMinToTime(p.break2Start)
-            });
-
-            dailyTbody.innerHTML += `
-              <tr>
-                <td>${a.agent}</td>
-                <td>${day}</td>
-                <td>${formatMinToTime(p.start)}</td>
-                <td>${formatMinToTime(p.end)}</td>
-                <td>${formatMinToTime(p.lunchStart)}</td>
-                <td>${formatMinToTime(p.break1Start)}</td>
-                <td>${formatMinToTime(p.break2Start)}</td>
-              </tr>
-            `;
-          } else {
-            row[day] = "OFF";
-            weeklyHtml += `<td>OFF</td>`;
-          }
-        });
-
-        weeklyHtml += `</tr>`;
-        weeklyTbody.innerHTML += weeklyHtml;
-        weeklyRosterRows.push(row);
-      });
-    }
-
-    function buildCoverageOutputs(cfg) {
-      const covTbody = document.querySelector("#coverageTable tbody");
-      const gapTbody = document.querySelector("#gapTable tbody");
-      covTbody.innerHTML = "";
-      gapTbody.innerHTML = "";
-
-      coverageRows = [];
-      gapRows = [];
-
-      const intervalStarts = intervalList.map(i => parseTimeToMin(i));
-
-      DAYS.forEach((day, dayIndex) => {
-        if (!isDayOpen(dayIndex, cfg)) return;
-
-        for (let i = 0; i < intervalList.length; i++) {
-          const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
-          const required = dayDemandMap[day][i] || 0;
-
-          let scheduled = 0;
-          let productive = 0;
-
-          generatedAgents.forEach((a, agentIndex) => {
-            for (let workDayIndex = 0; workDayIndex < 7; workDayIndex++) {
-              if (!isDayOpen(workDayIndex, cfg)) continue;
-              if (!a.workMask[workDayIndex]) continue;
-
-              const shiftStartAbs = getIntervalAbs(workDayIndex, a.startAbs % 1440);
-              const p = buildDayPattern(shiftStartAbs, agentIndex, workDayIndex, cfg);
-              const contrib = intervalContribution(p, intervalStartAbs, cfg.intervalSize);
-              scheduled += contrib.scheduled;
-              productive += contrib.productive;
-            }
-          });
-
-          scheduled = Number(scheduled.toFixed(2));
-          productive = Number(productive.toFixed(2));
-          const gap = Number((productive - required).toFixed(2));
-
-          coverageRows.push({
-            Day: day,
-            Interval: intervalList[i],
-            Required: required,
-            "Scheduled Count": scheduled,
-            "Productive Count": productive
-          });
-
-          gapRows.push({
-            Day: day,
-            Interval: intervalList[i],
-            Required: required,
-            "Productive Coverage": productive,
-            "Over/Under": gap
-          });
-
-          covTbody.innerHTML += `
-            <tr>
-              <td>${day}</td>
-              <td>${intervalList[i]}</td>
-              <td>${required}</td>
-              <td>${scheduled}</td>
-              <td>${productive}</td>
-            </tr>
-          `;
-
-          gapTbody.innerHTML += `
-            <tr>
-              <td>${day}</td>
-              <td>${intervalList[i]}</td>
-              <td>${required}</td>
-              <td>${productive}</td>
-              <td>${gap}</td>
-            </tr>
-          `;
-        }
-      });
-    }
-
-    function chartOptions(yTitle) {
-      return {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "top"
-          }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: "Days / Start Times"
-            }
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: yTitle
-            }
-          }
-        }
-      };
-    }
-
-    function safeDestroy(chartRef) {
-      if (chartRef) chartRef.destroy();
-    }
-
-    function drawCharts(cfg) {
-      safeDestroy(dailyTotalsChart);
-      safeDestroy(gapChart);
-      safeDestroy(startDistChart);
-
-      const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
-      const dayTotalsRequired = openDays.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
-      const dayTotalsProductive = openDays.map(day =>
-        coverageRows
-          .filter(r => r.Day === day)
-          .reduce((s, r) => s + r["Productive Count"], 0)
-      );
-
-      dailyTotalsChart = new Chart(document.getElementById("dailyTotalsChart"), {
-        type: "bar",
-        data: {
-          labels: openDays,
-          datasets: [
-            { label: "Required", data: dayTotalsRequired },
-            { label: "Productive Coverage", data: dayTotalsProductive }
-          ]
-        },
-        options: chartOptions("Total Daily Coverage")
-      });
-
-      const dayGapTotals = openDays.map(day =>
-        gapRows
-          .filter(r => r.Day === day)
-          .reduce((s, r) => s + r["Over/Under"], 0)
-      );
-
-      gapChart = new Chart(document.getElementById("gapChart"), {
-        type: "bar",
-        data: {
-          labels: openDays,
-          datasets: [{ label: "Daily Over / Under", data: dayGapTotals }]
-        },
-        options: chartOptions("Gap")
-      });
-
-      const startCountMap = {};
-      generatedAgents.forEach(a => {
-        const key = formatMinToTime(a.startAbs);
-        startCountMap[key] = (startCountMap[key] || 0) + 1;
-      });
-
-      const startLabels = Object.keys(startCountMap).sort();
-      const startCounts = startLabels.map(k => startCountMap[k]);
-
-      startDistChart = new Chart(document.getElementById("startDistChart"), {
-        type: "bar",
-        data: {
-          labels: startLabels,
-          datasets: [{ label: "Agents by Start Time", data: startCounts }]
-        },
-        options: chartOptions("Headcount")
-      });
-    }
-
-    function buildPlannerSummary(cfg) {
-      const dayTotals = getWeeklyTotals(cfg);
-      const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
-
-      const busiestDay = openDays.reduce((a, b) => dayTotals[a] >= dayTotals[b] ? a : b, openDays[0] || "Mon");
-      const lightestDay = openDays.reduce((a, b) => dayTotals[a] <= dayTotals[b] ? a : b, openDays[0] || "Mon");
-
-      let worstGap = Infinity;
-      let worstGapRow = null;
-      gapRows.forEach(r => {
-        if (r["Over/Under"] < worstGap) {
-          worstGap = r["Over/Under"];
-          worstGapRow = r;
+          scheduled += isScheduled;
+          productive += productivePart;
         }
       });
 
-      const avgDailyGap = openDays.map(day =>
-        gapRows.filter(r => r.Day === day).reduce((s, r) => s + r["Over/Under"], 0)
-      );
+      scheduled = Number(scheduled.toFixed(2));
+      productive = Number(productive.toFixed(2));
+      const gap = Number((productive - required).toFixed(2));
 
-      let rca = [];
-      let actions = [];
+      coverageRows.push({
+        Day: day,
+        Interval: intervalList[i],
+        Required: required,
+        "Scheduled Count": scheduled,
+        "Productive Count": productive
+      });
 
-      if (cfg.planningMode === "fixed" && weeklySummary && cfg.availableHC < weeklySummary.peakConcurrent) {
-        rca.push("Available HC is below the peak concurrent requirement.");
-        actions.push("Expect understaffing in peak windows unless more HC is added or requirements are rebalanced.");
-      }
+      gapRows.push({
+        Day: day,
+        Interval: intervalList[i],
+        Required: required,
+        "Productive Coverage": productive,
+        "Over/Under": gap
+      });
 
-      if (worstGapRow && worstGapRow["Over/Under"] < 0) {
-        rca.push(`Largest coverage risk is on ${worstGapRow.Day} at ${worstGapRow.Interval}.`);
-        actions.push("Add later starts, change week off placement, or relax shoulder protection slightly around that day.");
-      }
-
-      if (avgDailyGap.length && Math.min(...avgDailyGap) < 0) {
-        rca.push("Some open days still show net understaffing after off-day assignment.");
-        actions.push("Move more off days toward lighter demand days or increase the schedule base.");
-      }
-
-      if (avgDailyGap.length && Math.max(...avgDailyGap) > 10) {
-        rca.push("There is noticeable overstaffing on lighter open days.");
-        actions.push("Tighten shoulder protection or reduce unnecessary early starts.");
-      }
-
-      if (!rca.length) {
-        rca.push("Coverage is reasonably balanced against the uploaded open-day demand profile.");
-        actions.push("Export the results and validate meal and break placement with operations.");
-      }
-
-      const summary = `
-        <div class="summary-item"><strong>Total Agents Generated:</strong> ${generatedAgents.length}</div>
-        <div class="summary-item"><strong>Operating Days:</strong> ${cfg.operatingDays}</div>
-        <div class="summary-item"><strong>Working Days Per Agent:</strong> ${cfg.workingDays}</div>
-        <div class="summary-item"><strong>Busiest Open Day:</strong> ${busiestDay} (${dayTotals[busiestDay] || 0})</div>
-        <div class="summary-item"><strong>Lightest Open Day:</strong> ${lightestDay} (${dayTotals[lightestDay] || 0})</div>
-        <div class="summary-item"><strong>Planning Mode:</strong> ${cfg.planningMode === "fixed" ? "Use My Available HC" : "Calculate HC for Me"}</div>
-        <div class="summary-item"><strong>RCA:</strong> ${rca.join(" ")}</div>
-        <div class="summary-item"><strong>Action Plan:</strong> ${actions.join(" ")}</div>
+      covTbody.innerHTML += `
+        <tr>
+          <td>${day}</td>
+          <td>${intervalList[i]}</td>
+          <td>${required}</td>
+          <td>${scheduled}</td>
+          <td>${productive}</td>
+        </tr>
       `;
 
-      document.getElementById("plannerSummary").innerHTML = summary;
+      gapTbody.innerHTML += `
+        <tr>
+          <td>${day}</td>
+          <td>${intervalList[i]}</td>
+          <td>${required}</td>
+          <td>${productive}</td>
+          <td>${gap}</td>
+        </tr>
+      `;
     }
+  });
+}
 
-    function rowsToCSV(rows) {
-      if (!rows.length) return "";
-      const headers = Object.keys(rows[0]);
-      const lines = [
-        headers.join(","),
-        ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))
-      ];
-      return lines.join("\n");
-    }
-
-    function downloadWeeklyCSV() {
-      if (!weeklyRosterRows.length) {
-        alert("Generate schedules first.");
-        return;
+function chartOptions(yTitle) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top"
       }
-      downloadTextFile(rowsToCSV(weeklyRosterRows), "weekly_schedule.csv", "text/csv");
-    }
-
-    function downloadDailyCSV() {
-      if (!dailyDetailedRows.length) {
-        alert("Generate schedules first.");
-        return;
-      }
-      downloadTextFile(rowsToCSV(dailyDetailedRows), "daily_detailed_schedule.csv", "text/csv");
-    }
-
-    function downloadCoverageCSV() {
-      if (!coverageRows.length) {
-        alert("Generate schedules first.");
-        return;
-      }
-      const merged = coverageRows.map((r, i) => ({
-        Day: r.Day,
-        Interval: r.Interval,
-        Required: r.Required,
-        "Scheduled Count": r["Scheduled Count"],
-        "Productive Count": r["Productive Count"],
-        "Over/Under": gapRows[i]["Over/Under"]
-      }));
-      downloadTextFile(rowsToCSV(merged), "coverage_summary.csv", "text/csv");
-    }
-
-    function generateSchedules() {
-      if (!weeklyMatrixRows.length) {
-        alert("Please upload a weekly requirement file first.");
-        return;
-      }
-
-      const cfg = buildConfig();
-      weeklySummary = calculateWeeklySummary(cfg);
-
-      let targetHC = 0;
-      if (cfg.planningMode === "fixed") {
-        targetHC = Math.max(1, Math.floor(cfg.availableHC || 0));
-        if (targetHC <= 0) {
-          alert("Please enter a valid Available HC.");
-          return;
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: "Days / Start Times"
         }
-      } else {
-        targetHC = weeklySummary.suggestedTarget;
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: yTitle
+        }
       }
-
-      generateBaseAgents(cfg, targetHC);
-      assignOffDays(cfg);
-      buildDailyAndWeeklyOutputs(cfg);
-      buildCoverageOutputs(cfg);
-      renderWeeklySummary(cfg, generatedAgents.length);
-      drawCharts(cfg);
-      buildPlannerSummary(cfg);
     }
-  </script>
+  };
+}
+
+function safeDestroy(chartRef) {
+  if (chartRef) chartRef.destroy();
+}
+
+function drawCharts(cfg) {
+  safeDestroy(dailyTotalsChart);
+  safeDestroy(gapChart);
+  safeDestroy(startDistChart);
+
+  const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
+  const dayTotalsRequired = openDays.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
+  const dayTotalsProductive = openDays.map(day =>
+    coverageRows
+      .filter(r => r.Day === day)
+      .reduce((s, r) => s + r["Productive Count"], 0)
+  );
+
+  dailyTotalsChart = new Chart(document.getElementById("dailyTotalsChart"), {
+    type: "bar",
+    data: {
+      labels: openDays,
+      datasets: [
+        { label: "Required", data: dayTotalsRequired },
+        { label: "Productive Coverage", data: dayTotalsProductive }
+      ]
+    },
+    options: chartOptions("Total Daily Coverage")
+  });
+
+  const dayGapTotals = openDays.map(day =>
+    gapRows
+      .filter(r => r.Day === day)
+      .reduce((s, r) => s + r["Over/Under"], 0)
+  );
+
+  gapChart = new Chart(document.getElementById("gapChart"), {
+    type: "bar",
+    data: {
+      labels: openDays,
+      datasets: [{ label: "Daily Over / Under", data: dayGapTotals }]
+    },
+    options: chartOptions("Gap")
+  });
+
+  const startCountMap = {};
+  generatedAgents.forEach(a => {
+    const key = formatMinToTime(a.startClockMin);
+    startCountMap[key] = (startCountMap[key] || 0) + 1;
+  });
+
+  const startLabels = Object.keys(startCountMap).sort();
+  const startCounts = startLabels.map(k => startCountMap[k]);
+
+  startDistChart = new Chart(document.getElementById("startDistChart"), {
+    type: "bar",
+    data: {
+      labels: startLabels,
+      datasets: [{ label: "Agents by Start Time", data: startCounts }]
+    },
+    options: chartOptions("Headcount")
+  });
+}
+
+function buildPlannerSummary(cfg) {
+  const dayTotals = getWeeklyTotals(cfg);
+  const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
+
+  const busiestDay = openDays.reduce((a, b) => dayTotals[a] >= dayTotals[b] ? a : b, openDays[0] || "Mon");
+  const lightestDay = openDays.reduce((a, b) => dayTotals[a] <= dayTotals[b] ? a : b, openDays[0] || "Mon");
+
+  let worstGap = Infinity;
+  let worstGapRow = null;
+  gapRows.forEach(r => {
+    if (r["Over/Under"] < worstGap) {
+      worstGap = r["Over/Under"];
+      worstGapRow = r;
+    }
+  });
+
+  const avgDailyGap = openDays.map(day =>
+    gapRows.filter(r => r.Day === day).reduce((s, r) => s + r["Over/Under"], 0)
+  );
+
+  let rca = [];
+  let actions = [];
+
+  if (cfg.planningMode === "fixed" && weeklySummary && cfg.availableHC < weeklySummary.peakConcurrent) {
+    rca.push("Available HC is below the peak concurrent requirement.");
+    actions.push("Expect understaffing in peak windows unless more HC is added or requirements are rebalanced.");
+  }
+
+  if (worstGapRow && worstGapRow["Over/Under"] < 0) {
+    rca.push(`Largest coverage risk is on ${worstGapRow.Day} at ${worstGapRow.Interval}.`);
+    actions.push("Add later starts, change week off placement, or relax shoulder protection slightly around that day.");
+  }
+
+  if (avgDailyGap.length && Math.min(...avgDailyGap) < 0) {
+    rca.push("Some open days still show net understaffing after off-day assignment.");
+    actions.push("Move more off days toward lighter demand days or increase the schedule base.");
+  }
+
+  if (avgDailyGap.length && Math.max(...avgDailyGap) > 10) {
+    rca.push("There is noticeable overstaffing on lighter open days.");
+    actions.push("Tighten shoulder protection or reduce unnecessary early starts.");
+  }
+
+  if (!rca.length) {
+    rca.push("Coverage is reasonably balanced against the uploaded open-day weekly demand profile.");
+    actions.push("Export the results and validate meal and break placement with operations.");
+  }
+
+  const summary = `
+    <div class="summary-item"><strong>Total Agents Generated:</strong> ${generatedAgents.length}</div>
+    <div class="summary-item"><strong>Busiest Open Day:</strong> ${busiestDay} (${dayTotals[busiestDay] || 0})</div>
+    <div class="summary-item"><strong>Lightest Open Day:</strong> ${lightestDay} (${dayTotals[lightestDay] || 0})</div>
+    <div class="summary-item"><strong>Operating Days:</strong> ${cfg.operatingDays}</div>
+    <div class="summary-item"><strong>Working Days Per Agent:</strong> ${cfg.workingDays}</div>
+    <div class="summary-item"><strong>Planning Mode:</strong> ${cfg.planningMode === "fixed" ? "Use My Available HC" : "Calculate HC for Me"}</div>
+    <div class="summary-item"><strong>RCA:</strong> ${rca.join(" ")}</div>
+    <div class="summary-item"><strong>Action Plan:</strong> ${actions.join(" ")}</div>
+  `;
+
+  document.getElementById("plannerSummary").innerHTML = summary;
+}
+
+function rowsToCSV(rows) {
+  if (!rows.length) return "";
+  const headers = Object.keys(rows[0]);
+  const lines = [
+    headers.join(","),
+    ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))
+  ];
+  return lines.join("\n");
+}
+
+function downloadWeeklyCSV() {
+  if (!weeklyRosterRows.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(weeklyRosterRows), "weekly_schedule.csv", "text/csv");
+}
+
+function downloadDailyCSV() {
+  if (!dailyDetailedRows.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(dailyDetailedRows), "daily_detailed_schedule.csv", "text/csv");
+}
+
+function downloadCoverageCSV() {
+  if (!coverageRows.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  const merged = coverageRows.map((r, i) => ({
+    Day: r.Day,
+    Interval: r.Interval,
+    Required: r.Required,
+    "Scheduled Count": r["Scheduled Count"],
+    "Productive Count": r["Productive Count"],
+    "Over/Under": gapRows[i]["Over/Under"]
+  }));
+  downloadTextFile(rowsToCSV(merged), "coverage_summary.csv", "text/csv");
+}
+
+function generateSchedules() {
+  if (!weeklyMatrixRows.length) {
+    alert("Please upload a weekly requirement file first.");
+    return;
+  }
+
+  const cfg = buildConfig();
+  weeklySummary = calculateWeeklySummary(cfg);
+
+  let targetHC = 0;
+  if (cfg.planningMode === "fixed") {
+    targetHC = Math.max(1, Math.floor(cfg.availableHC || 0));
+    if (targetHC <= 0) {
+      alert("Please enter a valid Available HC.");
+      return;
+    }
+  } else {
+    targetHC = weeklySummary.suggestedTarget;
+  }
+
+  generateBaseAgents(cfg, targetHC);
+  assignOffDays(cfg);
+  buildDailyAndWeeklyOutputs(cfg);
+  buildCoverageOutputs(cfg);
+  renderWeeklySummary(cfg, generatedAgents.length);
+  drawCharts(cfg);
+  buildPlannerSummary(cfg);
+}
+</script>
 </body>
 </html>
