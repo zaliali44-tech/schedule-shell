@@ -899,7 +899,24 @@ function calculateWeeklySummary(cfg) {
 
   const productiveHoursPerWeek = PRODUCTIVE_HOURS_PER_DAY * cfg.workingDays;
   const baseHC = productiveHoursPerWeek > 0 ? weeklyRequiredHours / productiveHoursPerWeek : 0;
-  const suggestedTarget = Math.ceil(Math.max(baseHC, peakConcurrent) * 1.05);
+
+  let efficiencyFactor = 1.05;
+
+  if (cfg.operatingHours >= 24) {
+    efficiencyFactor = 1.25;
+  } else if (cfg.operatingHours >= 20) {
+    efficiencyFactor = 1.18;
+  } else if (cfg.operatingHours >= 16) {
+    efficiencyFactor = 1.14;
+  } else if (cfg.operatingHours >= 12) {
+    efficiencyFactor = 1.10;
+  }
+
+  if (cfg.operatingDays === 7 && cfg.workingDays <= 5) {
+    efficiencyFactor += 0.08;
+  }
+
+  const suggestedTarget = Math.ceil(Math.max(baseHC * efficiencyFactor, peakConcurrent * 1.08));
 
   return {
     weeklyRequiredHours: Number(weeklyRequiredHours.toFixed(2)),
@@ -1505,20 +1522,55 @@ function generateSchedules() {
   weeklySummary = calculateWeeklySummary(cfg);
 
   let targetHC = 0;
+
   if (cfg.planningMode === "fixed") {
     targetHC = Math.max(1, Math.floor(cfg.availableHC || 0));
     if (targetHC <= 0) {
       alert("Please enter a valid Available HC.");
       return;
     }
-  } else {
-    targetHC = weeklySummary.suggestedTarget;
+
+    generateBaseAgents(cfg, targetHC);
+    assignOffDays(cfg);
+    buildDailyAndWeeklyOutputs(cfg);
+    buildCoverageOutputs(cfg);
+    renderWeeklySummary(cfg, generatedAgents.length);
+    drawCharts(cfg);
+    buildPlannerSummary(cfg);
+    return;
   }
 
-  generateBaseAgents(cfg, targetHC);
-  assignOffDays(cfg);
-  buildDailyAndWeeklyOutputs(cfg);
-  buildCoverageOutputs(cfg);
+  targetHC = weeklySummary.suggestedTarget;
+
+  let attempts = 0;
+  let solved = false;
+
+  while (attempts < 12 && !solved) {
+    attempts++;
+
+    generateBaseAgents(cfg, targetHC);
+    assignOffDays(cfg);
+    buildDailyAndWeeklyOutputs(cfg);
+    buildCoverageOutputs(cfg);
+
+    const requiredRows = coverageRows.filter(r => Number(r.Required) > 0);
+
+    const zeroScheduledRisk = requiredRows.some(r => Number(r["Scheduled Count"]) === 0);
+    const worstGap = requiredRows.length
+      ? Math.min(...requiredRows.map(r => {
+          const match = gapRows.find(g => g.Day === r.Day && g.Interval === r.Interval);
+          return match ? Number(match["Over/Under"]) : 0;
+        }))
+      : 0;
+
+    if (!zeroScheduledRisk && worstGap >= -0.5) {
+      solved = true;
+    } else {
+      const uplift = Math.max(2, Math.ceil(targetHC * 0.08));
+      targetHC += uplift;
+    }
+  }
+
   renderWeeklySummary(cfg, generatedAgents.length);
   drawCharts(cfg);
   buildPlannerSummary(cfg);
