@@ -900,23 +900,28 @@ function calculateWeeklySummary(cfg) {
   const productiveHoursPerWeek = PRODUCTIVE_HOURS_PER_DAY * cfg.workingDays;
   const baseHC = productiveHoursPerWeek > 0 ? weeklyRequiredHours / productiveHoursPerWeek : 0;
 
-  let efficiencyFactor = 1.05;
+  const openDayCoverageFactor = cfg.workingDays > 0 ? (cfg.operatingDays / cfg.workingDays) : 1;
 
+  let weeklyBuffer = 1.06;
   if (cfg.operatingHours >= 24) {
-    efficiencyFactor = 1.25;
+    weeklyBuffer = 1.10;
   } else if (cfg.operatingHours >= 20) {
-    efficiencyFactor = 1.18;
+    weeklyBuffer = 1.08;
   } else if (cfg.operatingHours >= 16) {
-    efficiencyFactor = 1.14;
-  } else if (cfg.operatingHours >= 12) {
-    efficiencyFactor = 1.10;
+    weeklyBuffer = 1.07;
   }
 
-  if (cfg.operatingDays === 7 && cfg.workingDays <= 5) {
-    efficiencyFactor += 0.08;
+  let peakBuffer = 1.05;
+  if (cfg.operatingHours >= 24) {
+    peakBuffer = 1.10;
+  } else if (cfg.operatingHours >= 20) {
+    peakBuffer = 1.08;
   }
 
-  const suggestedTarget = Math.ceil(Math.max(baseHC * efficiencyFactor, peakConcurrent * 1.08));
+  const targetFromWeekly = baseHC * weeklyBuffer;
+  const targetFromPeak = peakConcurrent * openDayCoverageFactor * peakBuffer;
+
+  const suggestedTarget = Math.ceil(Math.max(targetFromWeekly, targetFromPeak));
 
   return {
     weeklyRequiredHours: Number(weeklyRequiredHours.toFixed(2)),
@@ -1245,38 +1250,71 @@ function buildCoverageOutputs(cfg) {
   DAYS.forEach((day, dayIndex) => {
     if (!isDayOpen(dayIndex, cfg)) return;
 
-    for (let i = 0; i < intervalList.length; i++) {
-      const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
-      const required = dayDemandMap[day][i] || 0;
+    const scheduledByInterval = Array(intervalList.length).fill(0);
+    const productiveByInterval = Array(intervalList.length).fill(0);
 
-      let scheduled = 0;
-      let productive = 0;
+    generatedAgents.forEach((a, agentIndex) => {
+      // Same-day shift
+      if (a.workMask[dayIndex]) {
+        const shiftStartAbs = (dayIndex * 1440) + a.startClockMin;
+        const p = buildDayPattern(shiftStartAbs, agentIndex, dayIndex, cfg);
 
-      generatedAgents.forEach((a, agentIndex) => {
-        for (let workDayIndex = 0; workDayIndex < 7; workDayIndex++) {
-          if (!isDayOpen(workDayIndex, cfg)) continue;
-          if (!a.workMask[workDayIndex]) continue;
-
-          const shiftStartAbs = (workDayIndex * 1440) + a.startClockMin;
-          const p = buildDayPattern(shiftStartAbs, agentIndex, workDayIndex, cfg);
+        for (let i = 0; i < intervalList.length; i++) {
+          const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
 
           const scheduledOverlap = overlapAbsoluteDuration(shiftStartAbs, SHIFT_MIN, intervalStartAbs, cfg.intervalSize);
           const isScheduled = scheduledOverlap > 0 ? 1 : 0;
 
-          const lunchLoss = overlapAbsoluteDuration(p.lunchStart, LUNCH_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
-          const break1Loss = overlapAbsoluteDuration(p.break1Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
-          const break2Loss = overlapAbsoluteDuration(p.break2Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+          if (isScheduled > 0) {
+            const lunchLoss = overlapAbsoluteDuration(p.lunchStart, LUNCH_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+            const break1Loss = overlapAbsoluteDuration(p.break1Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+            const break2Loss = overlapAbsoluteDuration(p.break2Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
 
-          let productivePart = isScheduled - lunchLoss - break1Loss - break2Loss;
-          productivePart = Math.max(0, Math.min(1, productivePart));
+            let productivePart = isScheduled - lunchLoss - break1Loss - break2Loss;
+            productivePart = Math.max(0, Math.min(1, productivePart));
 
-          scheduled += isScheduled;
-          productive += productivePart;
+            scheduledByInterval[i] += 1;
+            productiveByInterval[i] += productivePart;
+          }
         }
-      });
+      }
 
-      scheduled = Number(scheduled.toFixed(2));
-      productive = Number(productive.toFixed(2));
+      // Previous-day overnight spill only
+      const prevDayIndex = dayIndex - 1;
+      if (prevDayIndex >= 0 && isDayOpen(prevDayIndex, cfg) && a.workMask[prevDayIndex]) {
+        const prevShiftStartAbs = (prevDayIndex * 1440) + a.startClockMin;
+        const prevShiftEndAbs = prevShiftStartAbs + SHIFT_MIN;
+
+        // Only continue if previous-day shift crosses into current day
+        if (prevShiftEndAbs > (dayIndex * 1440)) {
+          const pPrev = buildDayPattern(prevShiftStartAbs, agentIndex, prevDayIndex, cfg);
+
+          for (let i = 0; i < intervalList.length; i++) {
+            const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
+
+            const scheduledOverlap = overlapAbsoluteDuration(prevShiftStartAbs, SHIFT_MIN, intervalStartAbs, cfg.intervalSize);
+            const isScheduled = scheduledOverlap > 0 ? 1 : 0;
+
+            if (isScheduled > 0) {
+              const lunchLoss = overlapAbsoluteDuration(pPrev.lunchStart, LUNCH_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+              const break1Loss = overlapAbsoluteDuration(pPrev.break1Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+              const break2Loss = overlapAbsoluteDuration(pPrev.break2Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+
+              let productivePart = isScheduled - lunchLoss - break1Loss - break2Loss;
+              productivePart = Math.max(0, Math.min(1, productivePart));
+
+              scheduledByInterval[i] += 1;
+              productiveByInterval[i] += productivePart;
+            }
+          }
+        }
+      }
+    });
+
+    for (let i = 0; i < intervalList.length; i++) {
+      const required = dayDemandMap[day][i] || 0;
+      const scheduled = Number(scheduledByInterval[i].toFixed(2));
+      const productive = Number(productiveByInterval[i].toFixed(2));
       const gap = Number((productive - required).toFixed(2));
 
       coverageRows.push({
@@ -1542,10 +1580,17 @@ function generateSchedules() {
 
   targetHC = weeklySummary.suggestedTarget;
 
+  const hardCap = Math.ceil(
+    Math.max(
+      weeklySummary.suggestedTarget * 1.25,
+      weeklySummary.peakConcurrent * (cfg.operatingDays / Math.max(1, cfg.workingDays)) * 1.25
+    )
+  );
+
   let attempts = 0;
   let solved = false;
 
-  while (attempts < 12 && !solved) {
+  while (attempts < 5 && !solved) {
     attempts++;
 
     generateBaseAgents(cfg, targetHC);
@@ -1555,7 +1600,10 @@ function generateSchedules() {
 
     const requiredRows = coverageRows.filter(r => Number(r.Required) > 0);
 
-    const zeroScheduledRisk = requiredRows.some(r => Number(r["Scheduled Count"]) === 0);
+    const zeroScheduledRisk = requiredRows.some(r =>
+      Number(r.Required) >= 3 && Number(r["Scheduled Count"]) === 0
+    );
+
     const worstGap = requiredRows.length
       ? Math.min(...requiredRows.map(r => {
           const match = gapRows.find(g => g.Day === r.Day && g.Interval === r.Interval);
@@ -1563,11 +1611,27 @@ function generateSchedules() {
         }))
       : 0;
 
-    if (!zeroScheduledRisk && worstGap >= -0.5) {
+    const avgCoverageRatio = requiredRows.length
+      ? requiredRows.reduce((sum, r) => {
+          const req = Number(r.Required);
+          const prod = Number(r["Productive Count"]);
+          return sum + Math.min(1, req > 0 ? prod / req : 1);
+        }, 0) / requiredRows.length
+      : 1;
+
+    const acceptableGap = -Math.max(2, Math.ceil(weeklySummary.peakConcurrent * 0.10));
+
+    if (!zeroScheduledRisk && worstGap >= acceptableGap && avgCoverageRatio >= 0.85) {
       solved = true;
     } else {
-      const uplift = Math.max(2, Math.ceil(targetHC * 0.08));
-      targetHC += uplift;
+      const uplift = Math.max(2, Math.ceil(targetHC * 0.04));
+      const nextTarget = Math.min(hardCap, targetHC + uplift);
+
+      if (nextTarget === targetHC) {
+        solved = true;
+      } else {
+        targetHC = nextTarget;
+      }
     }
   }
 
