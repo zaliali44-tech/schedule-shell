@@ -282,6 +282,15 @@
       </div>
 
       <div class="field">
+        <label for="operatingDays">Operating Days Per Week</label>
+        <select id="operatingDays">
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7" selected>7</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label for="workingDays">Working Days Per Week</label>
         <select id="workingDays">
           <option value="5" selected>5</option>
@@ -357,7 +366,7 @@
       Lunch: 60 minutes<br>
       Breaks: 2 × 15 minutes<br>
       Productive Hours per Day: 7.5<br>
-      Weekly Off Days: <span id="offDaysDisplay">2</span><br>
+      Weekly Off Days Within Open Days: <span id="offDaysDisplay">0</span><br>
       Auto-calculated HOOP End: <span id="hoopEndDisplay">20:00</span>
     </div>
 
@@ -366,7 +375,9 @@
       <strong>Interval, Mon, Tue, Wed, Thu, Fri, Sat, Sun</strong><br>
       Example:<br>
       09:00,20,20,20,10,20,28,20<br>
-      09:30,24,22,24,12,24,30,24
+      09:30,24,22,24,12,24,30,24<br><br>
+      For 5 or 6 operating days, the system treats the remaining days as closed from the start of the week order:
+      5 days = Mon-Fri open, 6 days = Mon-Sat open, 7 days = Mon-Sun open.
     </div>
   </div>
 
@@ -412,13 +423,13 @@
       <div class="kpi-card">
         <div class="kpi-title">Weekly Required Agent-Hours</div>
         <div class="kpi-value" id="kpiWeeklyHours">0</div>
-        <div class="kpi-note">Total interval requirement converted into weekly coverage hours.</div>
+        <div class="kpi-note">Total open-day interval requirement converted into weekly coverage hours.</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-title">Productive Hours / Agent / Week</div>
         <div class="kpi-value" id="kpiProdHours">0</div>
-        <div class="kpi-note">Based on 9-hour shift minus lunch and breaks × working days.</div>
+        <div class="kpi-note">Based on 9-hour shift minus lunch and breaks × effective working days.</div>
       </div>
 
       <div class="kpi-card">
@@ -430,7 +441,7 @@
       <div class="kpi-card">
         <div class="kpi-title">Peak Concurrent Requirement</div>
         <div class="kpi-value" id="kpiPeakHC">0</div>
-        <div class="kpi-note">Highest single interval requirement across the week.</div>
+        <div class="kpi-note">Highest single interval requirement across open days.</div>
       </div>
 
       <div class="kpi-card">
@@ -587,33 +598,24 @@
       return `${hh}:${mm}`;
     }
 
-    function getSegments(startMin, durationMin) {
-      const s = ((startMin % 1440) + 1440) % 1440;
-      const end = s + durationMin;
-      if (end <= 1440) return [[s, end]];
-      return [[s, 1440], [0, end - 1440]];
+    function getOpenDayMask(cfg) {
+      const mask = Array(7).fill(false);
+      for (let i = 0; i < Math.min(7, cfg.operatingDays); i++) {
+        mask[i] = true;
+      }
+      return mask;
     }
 
-    function overlapMinutes(segAStart, segAEnd, segBStart, segBEnd) {
-      return Math.max(0, Math.min(segAEnd, segBEnd) - Math.max(segAStart, segBStart));
-    }
-
-    function overlapDuration(startA, durA, startB, durB) {
-      const aSegs = getSegments(startA, durA);
-      const bSegs = getSegments(startB, durB);
-      let total = 0;
-
-      aSegs.forEach(a => {
-        bSegs.forEach(b => {
-          total += overlapMinutes(a[0], a[1], b[0], b[1]);
-        });
-      });
-      return total;
+    function isDayOpen(dayIndex, cfg) {
+      return dayIndex >= 0 && dayIndex < cfg.operatingDays;
     }
 
     function updateDerivedDisplays() {
-      const workingDays = Number(document.getElementById("workingDays").value);
-      document.getElementById("offDaysDisplay").innerText = String(7 - workingDays);
+      const operatingDays = Number(document.getElementById("operatingDays").value);
+      const selectedWorkingDays = Number(document.getElementById("workingDays").value);
+      const effectiveWorkingDays = Math.min(selectedWorkingDays, operatingDays);
+      const offDaysWithinOpenDays = Math.max(0, operatingDays - effectiveWorkingDays);
+      document.getElementById("offDaysDisplay").innerText = String(offDaysWithinOpenDays);
 
       const hoopStart = parseTimeToMin(document.getElementById("hoopStart").value);
       const opHours = Number(document.getElementById("operatingHours").value);
@@ -639,7 +641,7 @@
       }
     }
 
-    ["workingDays", "hoopStart", "operatingHours", "planningMode"].forEach(id => {
+    ["operatingDays","workingDays", "hoopStart", "operatingHours", "planningMode"].forEach(id => {
       document.getElementById(id).addEventListener("change", updateDerivedDisplays);
     });
     updateDerivedDisplays();
@@ -656,26 +658,44 @@
     function downloadSampleTemplate() {
       const csv =
 `Interval,Mon,Tue,Wed,Thu,Fri,Sat,Sun
-09:00,20,20,20,10,20,28,20
-09:30,24,22,24,12,24,30,24
-10:00,30,25,30,15,30,33,30
-10:30,36,28,36,18,36,36,36
-11:00,40,32,40,20,40,40,40
-11:30,42,34,42,22,42,44,42
-12:00,42,34,42,22,42,44,42
-12:30,40,32,40,20,40,42,40
-13:00,36,28,36,18,36,38,36
-13:30,30,24,30,15,30,34,30`;
+00:00,12,12,12,12,12,12,12
+01:00,10,10,10,10,10,10,10
+02:00,8,8,8,8,8,8,8
+03:00,6,6,6,6,6,6,6
+04:00,6,6,6,6,6,6,6
+05:00,8,8,8,8,8,8,8
+06:00,12,12,12,12,12,12,12
+07:00,18,18,18,18,18,18,18
+08:00,24,24,24,24,24,24,24
+09:00,28,28,28,28,28,28,28
+10:00,32,32,32,32,32,32,32
+11:00,36,36,36,36,36,36,36
+12:00,34,34,34,34,34,34,34
+13:00,30,30,30,30,30,30,30
+14:00,26,26,26,26,26,26,26
+15:00,24,24,24,24,24,24,24
+16:00,22,22,22,22,22,22,22
+17:00,24,24,24,24,24,24,24
+18:00,26,26,26,26,26,26,26
+19:00,28,28,28,28,28,28,28
+20:00,26,26,26,26,26,26,26
+21:00,22,22,22,22,22,22,22
+22:00,18,18,18,18,18,18,18
+23:00,14,14,14,14,14,14,14`;
       downloadTextFile(csv, "schedule_requirement_template.csv", "text/csv");
     }
 
     function buildConfig() {
+      const operatingDays = Number(document.getElementById("operatingDays").value);
+      const selectedWorkingDays = Number(document.getElementById("workingDays").value);
       return {
         planningMode: document.getElementById("planningMode").value,
         availableHC: Number(document.getElementById("availableHC").value || 0),
         intervalSize: Number(document.getElementById("intervalSize").value),
         operatingHours: Number(document.getElementById("operatingHours").value),
-        workingDays: Number(document.getElementById("workingDays").value),
+        operatingDays,
+        workingDays: Math.min(selectedWorkingDays, operatingDays),
+        selectedWorkingDays,
         weekOffPattern: document.getElementById("weekOffPattern").value,
         hoopStart: parseTimeToMin(document.getElementById("hoopStart").value),
         earliestStart: parseTimeToMin(document.getElementById("earliestStart").value),
@@ -811,19 +831,23 @@
       handleFile(e.dataTransfer.files[0]);
     });
 
-    function getWeeklyTotals() {
+    function getWeeklyTotals(cfg) {
       const totals = {};
-      DAYS.forEach(day => {
-        totals[day] = (dayDemandMap[day] || []).reduce((s, v) => s + v, 0);
+      DAYS.forEach((day, dayIndex) => {
+        totals[day] = isDayOpen(dayIndex, cfg)
+          ? (dayDemandMap[day] || []).reduce((s, v) => s + v, 0)
+          : 0;
       });
       return totals;
     }
 
-    function getMasterRequirement() {
+    function getMasterRequirement(cfg) {
       return intervalList.map((_, idx) => {
         let max = 0;
-        DAYS.forEach(day => {
-          max = Math.max(max, dayDemandMap[day][idx] || 0);
+        DAYS.forEach((day, dayIndex) => {
+          if (isDayOpen(dayIndex, cfg)) {
+            max = Math.max(max, dayDemandMap[day][idx] || 0);
+          }
         });
         return max;
       });
@@ -835,9 +859,11 @@
       let peakConcurrent = 0;
 
       weeklyMatrixRows.forEach(row => {
-        DAYS.forEach(day => {
-          weeklyRequiredHours += (row[day] || 0) * intervalHours;
-          peakConcurrent = Math.max(peakConcurrent, row[day] || 0);
+        DAYS.forEach((day, dayIndex) => {
+          if (isDayOpen(dayIndex, cfg)) {
+            weeklyRequiredHours += (row[day] || 0) * intervalHours;
+            peakConcurrent = Math.max(peakConcurrent, row[day] || 0);
+          }
         });
       });
 
@@ -874,38 +900,30 @@
     function generateCandidateStarts(cfg) {
       const starts = [];
       const step = cfg.startInterval;
-      let latestStart = cfg.latestEnd - SHIFT_MIN;
 
-      if (latestStart < 0) latestStart += 1440;
-
-      let current = cfg.earliestStart;
-
-      if (cfg.earliestStart <= latestStart) {
-        while (current <= latestStart) {
-          starts.push(current);
-          current += step;
-        }
-      } else {
-        while (current < 1440) {
-          starts.push(current);
-          current += step;
-        }
-        current = 0;
-        while (current <= latestStart) {
-          starts.push(current);
-          current += step;
-        }
+      let latestEndAbs = cfg.latestEnd;
+      if (cfg.latestEnd <= cfg.earliestStart) {
+        latestEndAbs += 1440;
       }
 
-      return starts.length ? starts : [cfg.earliestStart];
+      const earliestStartAbs = cfg.earliestStart;
+      const latestStartAbs = latestEndAbs - SHIFT_MIN;
+
+      let current = earliestStartAbs;
+      while (current <= latestStartAbs) {
+        starts.push(current);
+        current += step;
+      }
+
+      return starts.length ? starts : [earliestStartAbs];
     }
 
-    function buildDayPattern(startMin, agentIndex, dayIndex, cfg) {
+    function buildDayPattern(startAbs, agentIndex, dayIndex, cfg) {
       const offsetStep = cfg.staggerGap;
       const offset = ((agentIndex + dayIndex) % 3) * offsetStep;
 
-      const shiftStart = startMin;
-      const shiftEnd = startMin + SHIFT_MIN;
+      const shiftStart = startAbs;
+      const shiftEnd = startAbs + SHIFT_MIN;
 
       let break1 = shiftStart + 120 + offset;
       let lunch = shiftStart + (cfg.mealOffsetHours * 60) + offset;
@@ -932,13 +950,13 @@
       };
     }
 
-    function intervalContribution(pattern, intervalStart, intervalSize) {
-      const scheduledOverlap = overlapDuration(pattern.start, SHIFT_MIN, intervalStart, intervalSize);
+    function intervalContribution(pattern, intervalStartAbs, intervalSize) {
+      const scheduledOverlap = overlapDuration(pattern.start, SHIFT_MIN, intervalStartAbs, intervalSize);
       const scheduled = scheduledOverlap > 0 ? 1 : 0;
 
-      const lunchLoss = overlapDuration(pattern.lunchStart, LUNCH_MIN, intervalStart, intervalSize) / intervalSize;
-      const break1Loss = overlapDuration(pattern.break1Start, BREAK_MIN, intervalStart, intervalSize) / intervalSize;
-      const break2Loss = overlapDuration(pattern.break2Start, BREAK_MIN, intervalStart, intervalSize) / intervalSize;
+      const lunchLoss = overlapDuration(pattern.lunchStart, LUNCH_MIN, intervalStartAbs, intervalSize) / intervalSize;
+      const break1Loss = overlapDuration(pattern.break1Start, BREAK_MIN, intervalStartAbs, intervalSize) / intervalSize;
+      const break2Loss = overlapDuration(pattern.break2Start, BREAK_MIN, intervalStartAbs, intervalSize) / intervalSize;
 
       let productive = scheduled - lunchLoss - break1Loss - break2Loss;
       productive = Math.max(0, Math.min(1, productive));
@@ -946,9 +964,13 @@
       return { scheduled, productive };
     }
 
+    function getIntervalAbs(dayIndex, intervalMin) {
+      return (dayIndex * 1440) + intervalMin;
+    }
+
     function generateBaseAgents(cfg, targetHC) {
       const protect = getProtectionConfig(cfg);
-      const masterRequired = getMasterRequirement();
+      const masterRequired = getMasterRequirement(cfg);
       const intervalStarts = intervalList.map(i => parseTimeToMin(i));
       const maxRequired = Math.max(...masterRequired);
       const peakFlags = masterRequired.map(v => v >= (maxRequired * protect.peakThreshold));
@@ -960,8 +982,8 @@
       for (let agentNo = 0; agentNo < targetHC; agentNo++) {
         let best = null;
 
-        candidateStarts.forEach(start => {
-          const tempPattern = buildDayPattern(start, agentNo, 0, cfg);
+        candidateStarts.forEach(startAbs => {
+          const tempPattern = buildDayPattern(startAbs, agentNo, 0, cfg);
           let score = 0;
 
           for (let i = 0; i < intervalStarts.length; i++) {
@@ -985,11 +1007,11 @@
           const peakCenterIndex = masterRequired.indexOf(maxRequired);
           const peakCenterMin = intervalStarts[peakCenterIndex];
           const idealStart = peakCenterMin - 240;
-          const dist = Math.abs(start - idealStart);
+          const dist = Math.abs((startAbs % 1440) - idealStart);
           score -= dist / 5000;
 
           if (!best || score > best.score) {
-            best = { start, score, pattern: tempPattern };
+            best = { startAbs, score, pattern: tempPattern };
           }
         });
 
@@ -997,8 +1019,10 @@
 
         generatedAgents.push({
           agent: `Agent ${agentNo + 1}`,
-          start: chosen.start,
-          end: chosen.end,
+          startAbs: chosen.start,
+          endAbs: chosen.end,
+          startLabel: formatMinToTime(chosen.start),
+          endLabel: formatMinToTime(chosen.end),
           workMask: Array(7).fill(true)
         });
 
@@ -1009,30 +1033,41 @@
       }
     }
 
-    function generateOffDayCombos(offDays, pattern, dayTotals) {
+    function generateOffDayCombos(offDays, pattern, dayTotals, cfg) {
+      const openDayIndices = DAYS.map((_, idx) => idx).filter(idx => isDayOpen(idx, cfg));
+
       if (offDays <= 0) return [[]];
 
       let combos = [];
 
       if (offDays === 1) {
-        combos = DAYS.map((_, i) => [i]);
+        combos = openDayIndices.map(i => [i]);
       } else if (offDays === 2) {
         if (pattern === "continuous") {
-          combos = DAYS.map((_, i) => [i, (i + 1) % 7]);
+          for (let i = 0; i < openDayIndices.length - 1; i++) {
+            combos.push([openDayIndices[i], openDayIndices[i + 1]]);
+          }
         } else if (pattern === "split") {
-          for (let i = 0; i < 7; i++) {
-            for (let j = i + 1; j < 7; j++) {
-              const isContinuous = (j === i + 1) || (i === 0 && j === 6);
-              if (!isContinuous) combos.push([i, j]);
+          for (let i = 0; i < openDayIndices.length; i++) {
+            for (let j = i + 1; j < openDayIndices.length; j++) {
+              const dayA = openDayIndices[i];
+              const dayB = openDayIndices[j];
+              const isContinuous = (dayB === dayA + 1);
+              if (!isContinuous) combos.push([dayA, dayB]);
             }
           }
         } else {
-          const continuous = DAYS.map((_, i) => [i, (i + 1) % 7]);
+          const continuous = [];
+          for (let i = 0; i < openDayIndices.length - 1; i++) {
+            continuous.push([openDayIndices[i], openDayIndices[i + 1]]);
+          }
           const split = [];
-          for (let i = 0; i < 7; i++) {
-            for (let j = i + 1; j < 7; j++) {
-              const isContinuous = (j === i + 1) || (i === 0 && j === 6);
-              if (!isContinuous) split.push([i, j]);
+          for (let i = 0; i < openDayIndices.length; i++) {
+            for (let j = i + 1; j < openDayIndices.length; j++) {
+              const dayA = openDayIndices[i];
+              const dayB = openDayIndices[j];
+              const isContinuous = (dayB === dayA + 1);
+              if (!isContinuous) split.push([dayA, dayB]);
             }
           }
           combos = continuous.concat(split);
@@ -1041,9 +1076,11 @@
         combos = [[]];
       }
 
+      if (!combos.length) combos = [[]];
+
       combos = combos.map(c => ({
         days: c,
-        score: c.reduce((s, d) => s + dayTotals[DAYS[d]], 0)
+        score: c.reduce((s, d) => s + (dayTotals[DAYS[d]] || 0), 0)
       }));
 
       combos.sort((a, b) => a.score - b.score);
@@ -1051,17 +1088,20 @@
     }
 
     function assignOffDays(cfg) {
-      const offDays = 7 - cfg.workingDays;
-      const dayTotals = getWeeklyTotals();
+      const openDayCount = cfg.operatingDays;
+      const offDays = Math.max(0, openDayCount - cfg.workingDays);
+      const dayTotals = getWeeklyTotals(cfg);
+      const openMask = getOpenDayMask(cfg);
 
-      if (offDays <= 0) {
-        generatedAgents.forEach(agent => agent.workMask = Array(7).fill(true));
-        return;
-      }
+      generatedAgents.forEach(agent => {
+        agent.workMask = openMask.slice();
+      });
 
-      const combos = generateOffDayCombos(offDays, cfg.weekOffPattern, dayTotals);
+      if (offDays <= 0) return;
+
+      const combos = generateOffDayCombos(offDays, cfg.weekOffPattern, dayTotals, cfg);
       const offAssigned = Array(7).fill(0);
-      const avgDemand = Object.values(dayTotals).reduce((s, v) => s + v, 0) / 7;
+      const avgDemand = Object.values(dayTotals).reduce((s, v) => s + v, 0) / Math.max(1, cfg.operatingDays);
 
       generatedAgents.forEach(agent => {
         let bestCombo = combos[0];
@@ -1070,7 +1110,7 @@
         combos.forEach(combo => {
           let score = 0;
           combo.forEach(dayIndex => {
-            score += dayTotals[DAYS[dayIndex]];
+            score += dayTotals[DAYS[dayIndex]] || 0;
             score += offAssigned[dayIndex] * avgDemand * 0.2;
           });
 
@@ -1080,13 +1120,10 @@
           }
         });
 
-        const mask = Array(7).fill(true);
         bestCombo.forEach(dayIndex => {
-          mask[dayIndex] = false;
+          agent.workMask[dayIndex] = false;
           offAssigned[dayIndex] += 1;
         });
-
-        agent.workMask = mask;
       });
     }
 
@@ -1104,12 +1141,20 @@
         let weeklyHtml = `<tr><td>${a.agent}</td>`;
 
         DAYS.forEach((day, dayIndex) => {
+          if (!isDayOpen(dayIndex, cfg)) {
+            row[day] = "OFF";
+            weeklyHtml += `<td>OFF</td>`;
+            return;
+          }
+
           if (a.workMask[dayIndex]) {
-            const val = `${formatMinToTime(a.start)}-${formatMinToTime(a.end)}`;
+            const dayBase = dayIndex * 1440;
+            const shiftStartAbs = dayBase + (a.startAbs % 1440);
+            const val = `${formatMinToTime(shiftStartAbs)}-${formatMinToTime(shiftStartAbs + SHIFT_MIN)}`;
             row[day] = val;
             weeklyHtml += `<td>${val}</td>`;
 
-            const p = buildDayPattern(a.start, idx, dayIndex, cfg);
+            const p = buildDayPattern(shiftStartAbs, idx, dayIndex, cfg);
             dailyDetailedRows.push({
               Agent: a.agent,
               Day: day,
@@ -1155,19 +1200,26 @@
       const intervalStarts = intervalList.map(i => parseTimeToMin(i));
 
       DAYS.forEach((day, dayIndex) => {
+        if (!isDayOpen(dayIndex, cfg)) return;
+
         for (let i = 0; i < intervalList.length; i++) {
-          const intervalStart = intervalStarts[i];
+          const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
           const required = dayDemandMap[day][i] || 0;
 
           let scheduled = 0;
           let productive = 0;
 
           generatedAgents.forEach((a, agentIndex) => {
-            if (!a.workMask[dayIndex]) return;
-            const p = buildDayPattern(a.start, agentIndex, dayIndex, cfg);
-            const contrib = intervalContribution(p, intervalStart, cfg.intervalSize);
-            scheduled += contrib.scheduled;
-            productive += contrib.productive;
+            for (let workDayIndex = 0; workDayIndex < 7; workDayIndex++) {
+              if (!isDayOpen(workDayIndex, cfg)) continue;
+              if (!a.workMask[workDayIndex]) continue;
+
+              const shiftStartAbs = getIntervalAbs(workDayIndex, a.startAbs % 1440);
+              const p = buildDayPattern(shiftStartAbs, agentIndex, workDayIndex, cfg);
+              const contrib = intervalContribution(p, intervalStartAbs, cfg.intervalSize);
+              scheduled += contrib.scheduled;
+              productive += contrib.productive;
+            }
           });
 
           scheduled = Number(scheduled.toFixed(2));
@@ -1244,13 +1296,14 @@
       if (chartRef) chartRef.destroy();
     }
 
-    function drawCharts() {
+    function drawCharts(cfg) {
       safeDestroy(dailyTotalsChart);
       safeDestroy(gapChart);
       safeDestroy(startDistChart);
 
-      const dayTotalsRequired = DAYS.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
-      const dayTotalsProductive = DAYS.map(day =>
+      const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
+      const dayTotalsRequired = openDays.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
+      const dayTotalsProductive = openDays.map(day =>
         coverageRows
           .filter(r => r.Day === day)
           .reduce((s, r) => s + r["Productive Count"], 0)
@@ -1259,7 +1312,7 @@
       dailyTotalsChart = new Chart(document.getElementById("dailyTotalsChart"), {
         type: "bar",
         data: {
-          labels: DAYS,
+          labels: openDays,
           datasets: [
             { label: "Required", data: dayTotalsRequired },
             { label: "Productive Coverage", data: dayTotalsProductive }
@@ -1268,7 +1321,7 @@
         options: chartOptions("Total Daily Coverage")
       });
 
-      const dayGapTotals = DAYS.map(day =>
+      const dayGapTotals = openDays.map(day =>
         gapRows
           .filter(r => r.Day === day)
           .reduce((s, r) => s + r["Over/Under"], 0)
@@ -1277,7 +1330,7 @@
       gapChart = new Chart(document.getElementById("gapChart"), {
         type: "bar",
         data: {
-          labels: DAYS,
+          labels: openDays,
           datasets: [{ label: "Daily Over / Under", data: dayGapTotals }]
         },
         options: chartOptions("Gap")
@@ -1285,7 +1338,7 @@
 
       const startCountMap = {};
       generatedAgents.forEach(a => {
-        const key = formatMinToTime(a.start);
+        const key = formatMinToTime(a.startAbs);
         startCountMap[key] = (startCountMap[key] || 0) + 1;
       });
 
@@ -1303,13 +1356,11 @@
     }
 
     function buildPlannerSummary(cfg) {
-      const dayTotals = {};
-      DAYS.forEach(day => {
-        dayTotals[day] = (dayDemandMap[day] || []).reduce((s, v) => s + v, 0);
-      });
+      const dayTotals = getWeeklyTotals(cfg);
+      const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
 
-      const busiestDay = DAYS.reduce((a, b) => dayTotals[a] >= dayTotals[b] ? a : b);
-      const lightestDay = DAYS.reduce((a, b) => dayTotals[a] <= dayTotals[b] ? a : b);
+      const busiestDay = openDays.reduce((a, b) => dayTotals[a] >= dayTotals[b] ? a : b, openDays[0] || "Mon");
+      const lightestDay = openDays.reduce((a, b) => dayTotals[a] <= dayTotals[b] ? a : b, openDays[0] || "Mon");
 
       let worstGap = Infinity;
       let worstGapRow = null;
@@ -1320,7 +1371,7 @@
         }
       });
 
-      const avgDailyGap = DAYS.map(day =>
+      const avgDailyGap = openDays.map(day =>
         gapRows.filter(r => r.Day === day).reduce((s, r) => s + r["Over/Under"], 0)
       );
 
@@ -1337,25 +1388,27 @@
         actions.push("Add later starts, change week off placement, or relax shoulder protection slightly around that day.");
       }
 
-      if (Math.min(...avgDailyGap) < 0) {
-        rca.push("Some days still show net understaffing after off-day assignment.");
+      if (avgDailyGap.length && Math.min(...avgDailyGap) < 0) {
+        rca.push("Some open days still show net understaffing after off-day assignment.");
         actions.push("Move more off days toward lighter demand days or increase the schedule base.");
       }
 
-      if (Math.max(...avgDailyGap) > 10) {
-        rca.push("There is noticeable overstaffing on lighter days.");
+      if (avgDailyGap.length && Math.max(...avgDailyGap) > 10) {
+        rca.push("There is noticeable overstaffing on lighter open days.");
         actions.push("Tighten shoulder protection or reduce unnecessary early starts.");
       }
 
       if (!rca.length) {
-        rca.push("Coverage is reasonably balanced against the uploaded weekly demand profile.");
+        rca.push("Coverage is reasonably balanced against the uploaded open-day demand profile.");
         actions.push("Export the results and validate meal and break placement with operations.");
       }
 
       const summary = `
         <div class="summary-item"><strong>Total Agents Generated:</strong> ${generatedAgents.length}</div>
-        <div class="summary-item"><strong>Busiest Day:</strong> ${busiestDay} (${dayTotals[busiestDay]})</div>
-        <div class="summary-item"><strong>Lightest Day:</strong> ${lightestDay} (${dayTotals[lightestDay]})</div>
+        <div class="summary-item"><strong>Operating Days:</strong> ${cfg.operatingDays}</div>
+        <div class="summary-item"><strong>Working Days Per Agent:</strong> ${cfg.workingDays}</div>
+        <div class="summary-item"><strong>Busiest Open Day:</strong> ${busiestDay} (${dayTotals[busiestDay] || 0})</div>
+        <div class="summary-item"><strong>Lightest Open Day:</strong> ${lightestDay} (${dayTotals[lightestDay] || 0})</div>
         <div class="summary-item"><strong>Planning Mode:</strong> ${cfg.planningMode === "fixed" ? "Use My Available HC" : "Calculate HC for Me"}</div>
         <div class="summary-item"><strong>RCA:</strong> ${rca.join(" ")}</div>
         <div class="summary-item"><strong>Action Plan:</strong> ${actions.join(" ")}</div>
@@ -1431,7 +1484,7 @@
       buildDailyAndWeeklyOutputs(cfg);
       buildCoverageOutputs(cfg);
       renderWeeklySummary(cfg, generatedAgents.length);
-      drawCharts();
+      drawCharts(cfg);
       buildPlannerSummary(cfg);
     }
   </script>
