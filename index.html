@@ -903,24 +903,16 @@ function calculateWeeklySummary(cfg) {
   const openDayCoverageFactor = cfg.workingDays > 0 ? (cfg.operatingDays / cfg.workingDays) : 1;
 
   let weeklyBuffer = 1.06;
-  if (cfg.operatingHours >= 24) {
-    weeklyBuffer = 1.10;
-  } else if (cfg.operatingHours >= 20) {
-    weeklyBuffer = 1.08;
-  } else if (cfg.operatingHours >= 16) {
-    weeklyBuffer = 1.07;
-  }
+  if (cfg.operatingHours >= 24) weeklyBuffer = 1.10;
+  else if (cfg.operatingHours >= 20) weeklyBuffer = 1.08;
+  else if (cfg.operatingHours >= 16) weeklyBuffer = 1.07;
 
   let peakBuffer = 1.05;
-  if (cfg.operatingHours >= 24) {
-    peakBuffer = 1.10;
-  } else if (cfg.operatingHours >= 20) {
-    peakBuffer = 1.08;
-  }
+  if (cfg.operatingHours >= 24) peakBuffer = 1.10;
+  else if (cfg.operatingHours >= 20) peakBuffer = 1.08;
 
   const targetFromWeekly = baseHC * weeklyBuffer;
   const targetFromPeak = peakConcurrent * openDayCoverageFactor * peakBuffer;
-
   const suggestedTarget = Math.ceil(Math.max(targetFromWeekly, targetFromPeak));
 
   return {
@@ -939,13 +931,8 @@ function renderWeeklySummary(cfg, generatedHC) {
   document.getElementById("kpiProdHours").innerText = weeklySummary.productiveHoursPerWeek;
   document.getElementById("kpiBaseHC").innerText = weeklySummary.baseHC;
   document.getElementById("kpiPeakHC").innerText = weeklySummary.peakConcurrent;
-
-  if (cfg.planningMode === "fixed") {
-    document.getElementById("kpiTargetHC").innerText = cfg.availableHC || 0;
-  } else {
-    document.getElementById("kpiTargetHC").innerText = weeklySummary.suggestedTarget;
-  }
-
+  document.getElementById("kpiTargetHC").innerText =
+    cfg.planningMode === "fixed" ? (cfg.availableHC || 0) : weeklySummary.suggestedTarget;
   document.getElementById("kpiGeneratedHC").innerText = generatedHC;
 }
 
@@ -954,9 +941,7 @@ function generateCandidateStarts(cfg) {
   const step = cfg.startInterval;
 
   let latestEndAbs = cfg.latestEnd;
-  if (cfg.latestEnd <= cfg.earliestStart) {
-    latestEndAbs += 1440;
-  }
+  if (cfg.latestEnd <= cfg.earliestStart) latestEndAbs += 1440;
 
   const earliestStartAbs = cfg.earliestStart;
   const latestStartAbs = latestEndAbs - SHIFT_MIN;
@@ -970,28 +955,69 @@ function generateCandidateStarts(cfg) {
   return starts.length ? starts : [earliestStartAbs % 1440];
 }
 
-function buildDayPattern(startBase, agentIndex, dayIndex, cfg) {
-  const offsetStep = cfg.staggerGap;
-  const offset = ((agentIndex + dayIndex) % 3) * offsetStep;
+function getPriorityWeights(masterRequired) {
+  const n = masterRequired.length;
+  const weights = Array(n).fill(1);
 
+  const firstReq = masterRequired.findIndex(v => v > 0);
+  const lastReq = (() => {
+    for (let i = n - 1; i >= 0; i--) {
+      if (masterRequired[i] > 0) return i;
+    }
+    return -1;
+  })();
+
+  if (firstReq >= 0) {
+    for (let i = firstReq; i < Math.min(n, firstReq + 4); i++) {
+      weights[i] += (4 - (i - firstReq)) * 0.75;
+    }
+  }
+
+  if (lastReq >= 0) {
+    for (let i = Math.max(0, lastReq - 3); i <= lastReq; i++) {
+      weights[i] += (4 - (lastReq - i)) * 0.75;
+    }
+  }
+
+  const peak = Math.max(...masterRequired, 0);
+  if (peak > 0) {
+    for (let i = 0; i < n; i++) {
+      if (masterRequired[i] >= peak * 0.9) {
+        weights[i] += 0.5;
+      }
+    }
+  }
+
+  return weights;
+}
+
+function buildDayPattern(startBase, agentIndex, dayIndex, cfg) {
   const shiftStart = startBase;
   const shiftEnd = startBase + SHIFT_MIN;
 
-  let break1 = shiftStart + 120 + offset;
-  let lunch = shiftStart + (cfg.mealOffsetHours * 60) + offset;
-  let break2 = shiftStart + 420 + offset;
+  const seed = (agentIndex * 7 + dayIndex * 11 + Math.floor((startBase % 1440) / 15)) % 24;
 
   const latestLunchStart = shiftStart + SHIFT_MIN - 150;
   const earliestLunchStart = shiftStart + 180;
 
+  const lunchWindowStart = Math.max(earliestLunchStart, shiftStart + (cfg.mealOffsetHours * 60) - 45);
+  const lunchWindowEnd = Math.min(latestLunchStart, shiftStart + (cfg.mealOffsetHours * 60) + 60);
+
+  const lunchSlots = Math.max(1, Math.floor((lunchWindowEnd - lunchWindowStart) / 15) + 1);
+  let lunch = lunchWindowStart + ((seed % lunchSlots) * 15);
   lunch = Math.max(earliestLunchStart, Math.min(lunch, latestLunchStart));
 
-  const latestBreak1 = lunch - BREAK_MIN - 15;
-  break1 = Math.max(shiftStart + 60, Math.min(break1, latestBreak1));
+  const break1WindowStart = shiftStart + 90;
+  const break1WindowEnd = Math.min(lunch - 30, shiftStart + 180);
+  const break1Slots = Math.max(1, Math.floor((break1WindowEnd - break1WindowStart) / 15) + 1);
+  let break1 = break1WindowStart + (((seed + 3) % break1Slots) * 15);
+  break1 = Math.max(shiftStart + 60, Math.min(break1, lunch - 30));
 
-  const earliestBreak2 = lunch + LUNCH_MIN + 60;
-  const latestBreak2 = shiftStart + SHIFT_MIN - BREAK_MIN - 30;
-  break2 = Math.max(earliestBreak2, Math.min(break2, latestBreak2));
+  const break2WindowStart = Math.max(lunch + 75, shiftStart + 360);
+  const break2WindowEnd = Math.min(shiftStart + SHIFT_MIN - 30, shiftStart + 480);
+  const break2Slots = Math.max(1, Math.floor((break2WindowEnd - break2WindowStart) / 15) + 1);
+  let break2 = break2WindowStart + (((seed + 9) % break2Slots) * 15);
+  break2 = Math.max(lunch + 60, Math.min(break2, shiftStart + SHIFT_MIN - 30));
 
   return {
     start: shiftStart,
@@ -1024,11 +1050,11 @@ function generateBaseAgents(cfg, targetHC) {
   const protect = getProtectionConfig(cfg);
   const masterRequired = getMasterRequirement(cfg);
   const intervalStarts = intervalList.map(i => parseTimeToMin(i));
-  const maxRequired = Math.max(...masterRequired);
-  const peakFlags = masterRequired.map(v => v >= (maxRequired * protect.peakThreshold));
   const candidateStarts = generateCandidateStarts(cfg);
+  const priorityWeights = getPriorityWeights(masterRequired);
 
   const productiveCoverage = Array(masterRequired.length).fill(0);
+  const scheduledCoverage = Array(masterRequired.length).fill(0);
   generatedAgents = [];
 
   for (let agentNo = 0; agentNo < targetHC; agentNo++) {
@@ -1037,33 +1063,62 @@ function generateBaseAgents(cfg, targetHC) {
     candidateStarts.forEach(startClockMin => {
       const tempPattern = buildDayPattern(startClockMin, agentNo, 0, cfg);
       let score = 0;
+      const candidateProd = [];
+      const candidateSched = [];
 
       for (let i = 0; i < intervalStarts.length; i++) {
         const contrib = intervalContribution(tempPattern, intervalStarts[i], cfg.intervalSize);
-        const gap = Math.max(0, masterRequired[i] - productiveCoverage[i]);
+        candidateProd.push(contrib.productive);
+        candidateSched.push(contrib.scheduled);
 
-        score += Math.min(gap, contrib.productive) * 12;
+        const req = masterRequired[i];
+        const currentProd = productiveCoverage[i];
+        const currentSched = scheduledCoverage[i];
+        const gap = Math.max(0, req - currentProd);
+        const weight = priorityWeights[i];
 
-        if (peakFlags[i]) {
-          const nonProd = contrib.scheduled - contrib.productive;
-          score -= nonProd * 8;
-        }
+        score += Math.min(gap, contrib.productive) * 16 * weight;
 
-        const projected = productiveCoverage[i] + contrib.productive;
-        const shoulderCap = masterRequired[i] * protect.shoulderMax;
-        if (projected > shoulderCap) {
-          score -= (projected - shoulderCap) * 5;
-        }
+        if (req > 0 && currentSched === 0 && contrib.scheduled > 0) score += 10 * weight;
+        if (req > 0 && currentProd < req * 0.6 && contrib.productive > 0) score += 8 * weight;
+
+        const nonProd = contrib.scheduled - contrib.productive;
+        if (req > 0 && currentProd < req) score -= nonProd * 10 * weight;
+
+        const shoulderCap = req * protect.shoulderMax;
+        const projectedProd = currentProd + contrib.productive;
+        if (req > 0 && projectedProd > shoulderCap) score -= (projectedProd - shoulderCap) * 8;
+
+        const projectedSched = currentSched + contrib.scheduled;
+        if (req === 0 && projectedSched > 0) score -= projectedSched * 4;
       }
 
-      const peakCenterIndex = masterRequired.indexOf(maxRequired);
-      const peakCenterMin = intervalStarts[peakCenterIndex];
-      const idealStart = peakCenterMin - 240;
-      const dist = Math.abs(startClockMin - idealStart);
-      score -= dist / 5000;
+      const firstReqIndex = masterRequired.findIndex(v => v > 0);
+      const lastReqIndex = (() => {
+        for (let i = masterRequired.length - 1; i >= 0; i--) {
+          if (masterRequired[i] > 0) return i;
+        }
+        return -1;
+      })();
+
+      if (firstReqIndex >= 0) {
+        const idealOpenStart = Math.max(0, intervalStarts[firstReqIndex]);
+        score -= Math.abs(startClockMin - idealOpenStart) / 2500;
+      }
+
+      if (lastReqIndex >= 0) {
+        const idealCloseStart = Math.max(0, intervalStarts[lastReqIndex] - (SHIFT_MIN - cfg.intervalSize));
+        score -= Math.abs(startClockMin - idealCloseStart) / 4000;
+      }
 
       if (!best || score > best.score) {
-        best = { startClockMin, score, pattern: tempPattern };
+        best = {
+          startClockMin,
+          score,
+          pattern: tempPattern,
+          candidateProd,
+          candidateSched
+        };
       }
     });
 
@@ -1076,15 +1131,14 @@ function generateBaseAgents(cfg, targetHC) {
     });
 
     for (let i = 0; i < intervalStarts.length; i++) {
-      const contrib = intervalContribution(chosen, intervalStarts[i], cfg.intervalSize);
-      productiveCoverage[i] += contrib.productive;
+      productiveCoverage[i] += best ? best.candidateProd[i] : 0;
+      scheduledCoverage[i] += best ? best.candidateSched[i] : 0;
     }
   }
 }
 
 function generateOffDayCombos(offDays, pattern, dayTotals, cfg) {
   const openDayIndices = DAYS.map((_, idx) => idx).filter(idx => isDayOpen(idx, cfg));
-
   if (offDays <= 0) return [[]];
 
   let combos = [];
@@ -1093,30 +1147,24 @@ function generateOffDayCombos(offDays, pattern, dayTotals, cfg) {
     combos = openDayIndices.map(i => [i]);
   } else if (offDays === 2) {
     if (pattern === "continuous") {
-      for (let i = 0; i < openDayIndices.length - 1; i++) {
-        combos.push([openDayIndices[i], openDayIndices[i + 1]]);
-      }
+      for (let i = 0; i < openDayIndices.length - 1; i++) combos.push([openDayIndices[i], openDayIndices[i + 1]]);
     } else if (pattern === "split") {
       for (let i = 0; i < openDayIndices.length; i++) {
         for (let j = i + 1; j < openDayIndices.length; j++) {
           const dayA = openDayIndices[i];
           const dayB = openDayIndices[j];
-          const isContinuous = (dayB === dayA + 1);
-          if (!isContinuous) combos.push([dayA, dayB]);
+          if (dayB !== dayA + 1) combos.push([dayA, dayB]);
         }
       }
     } else {
       const continuous = [];
-      for (let i = 0; i < openDayIndices.length - 1; i++) {
-        continuous.push([openDayIndices[i], openDayIndices[i + 1]]);
-      }
+      for (let i = 0; i < openDayIndices.length - 1; i++) continuous.push([openDayIndices[i], openDayIndices[i + 1]]);
       const split = [];
       for (let i = 0; i < openDayIndices.length; i++) {
         for (let j = i + 1; j < openDayIndices.length; j++) {
           const dayA = openDayIndices[i];
           const dayB = openDayIndices[j];
-          const isContinuous = (dayB === dayA + 1);
-          if (!isContinuous) split.push([dayA, dayB]);
+          if (dayB !== dayA + 1) split.push([dayA, dayB]);
         }
       }
       combos = continuous.concat(split);
@@ -1137,15 +1185,11 @@ function generateOffDayCombos(offDays, pattern, dayTotals, cfg) {
 }
 
 function assignOffDays(cfg) {
-  const openDayCount = cfg.operatingDays;
-  const offDays = Math.max(0, openDayCount - cfg.workingDays);
+  const offDays = Math.max(0, cfg.operatingDays - cfg.workingDays);
   const dayTotals = getWeeklyTotals(cfg);
   const openMask = getOpenDayMask(cfg);
 
-  generatedAgents.forEach(agent => {
-    agent.workMask = openMask.slice();
-  });
-
+  generatedAgents.forEach(agent => { agent.workMask = openMask.slice(); });
   if (offDays <= 0) return;
 
   const combos = generateOffDayCombos(offDays, cfg.weekOffPattern, dayTotals, cfg);
@@ -1254,14 +1298,12 @@ function buildCoverageOutputs(cfg) {
     const productiveByInterval = Array(intervalList.length).fill(0);
 
     generatedAgents.forEach((a, agentIndex) => {
-      // Same-day shift
       if (a.workMask[dayIndex]) {
         const shiftStartAbs = (dayIndex * 1440) + a.startClockMin;
         const p = buildDayPattern(shiftStartAbs, agentIndex, dayIndex, cfg);
 
         for (let i = 0; i < intervalList.length; i++) {
           const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
-
           const scheduledOverlap = overlapAbsoluteDuration(shiftStartAbs, SHIFT_MIN, intervalStartAbs, cfg.intervalSize);
           const isScheduled = scheduledOverlap > 0 ? 1 : 0;
 
@@ -1279,19 +1321,16 @@ function buildCoverageOutputs(cfg) {
         }
       }
 
-      // Previous-day overnight spill only
       const prevDayIndex = dayIndex - 1;
       if (prevDayIndex >= 0 && isDayOpen(prevDayIndex, cfg) && a.workMask[prevDayIndex]) {
         const prevShiftStartAbs = (prevDayIndex * 1440) + a.startClockMin;
         const prevShiftEndAbs = prevShiftStartAbs + SHIFT_MIN;
 
-        // Only continue if previous-day shift crosses into current day
         if (prevShiftEndAbs > (dayIndex * 1440)) {
           const pPrev = buildDayPattern(prevShiftStartAbs, agentIndex, prevDayIndex, cfg);
 
           for (let i = 0; i < intervalList.length; i++) {
             const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
-
             const scheduledOverlap = overlapAbsoluteDuration(prevShiftStartAbs, SHIFT_MIN, intervalStartAbs, cfg.intervalSize);
             const isScheduled = scheduledOverlap > 0 ? 1 : 0;
 
@@ -1361,23 +1400,15 @@ function chartOptions(yTitle) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: "top"
-      }
+      legend: { position: "top" }
     },
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Days / Start Times"
-        }
+        title: { display: true, text: "Days / Start Times" }
       },
       y: {
         beginAtZero: true,
-        title: {
-          display: true,
-          text: yTitle
-        }
+        title: { display: true, text: yTitle }
       }
     }
   };
@@ -1395,9 +1426,7 @@ function drawCharts(cfg) {
   const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
   const dayTotalsRequired = openDays.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
   const dayTotalsProductive = openDays.map(day =>
-    coverageRows
-      .filter(r => r.Day === day)
-      .reduce((s, r) => s + r["Productive Count"], 0)
+    coverageRows.filter(r => r.Day === day).reduce((s, r) => s + r["Productive Count"], 0)
   );
 
   dailyTotalsChart = new Chart(document.getElementById("dailyTotalsChart"), {
@@ -1413,9 +1442,7 @@ function drawCharts(cfg) {
   });
 
   const dayGapTotals = openDays.map(day =>
-    gapRows
-      .filter(r => r.Day === day)
-      .reduce((s, r) => s + r["Over/Under"], 0)
+    gapRows.filter(r => r.Day === day).reduce((s, r) => s + r["Over/Under"], 0)
   );
 
   gapChart = new Chart(document.getElementById("gapChart"), {
@@ -1494,7 +1521,7 @@ function buildPlannerSummary(cfg) {
     actions.push("Export the results and validate meal and break placement with operations.");
   }
 
-  const summary = `
+  document.getElementById("plannerSummary").innerHTML = `
     <div class="summary-item"><strong>Total Agents Generated:</strong> ${generatedAgents.length}</div>
     <div class="summary-item"><strong>Busiest Open Day:</strong> ${busiestDay} (${dayTotals[busiestDay] || 0})</div>
     <div class="summary-item"><strong>Lightest Open Day:</strong> ${lightestDay} (${dayTotals[lightestDay] || 0})</div>
@@ -1504,8 +1531,6 @@ function buildPlannerSummary(cfg) {
     <div class="summary-item"><strong>RCA:</strong> ${rca.join(" ")}</div>
     <div class="summary-item"><strong>Action Plan:</strong> ${actions.join(" ")}</div>
   `;
-
-  document.getElementById("plannerSummary").innerHTML = summary;
 }
 
 function rowsToCSV(rows) {
@@ -1559,10 +1584,8 @@ function generateSchedules() {
   const cfg = buildConfig();
   weeklySummary = calculateWeeklySummary(cfg);
 
-  let targetHC = 0;
-
   if (cfg.planningMode === "fixed") {
-    targetHC = Math.max(1, Math.floor(cfg.availableHC || 0));
+    const targetHC = Math.max(1, Math.floor(cfg.availableHC || 0));
     if (targetHC <= 0) {
       alert("Please enter a valid Available HC.");
       return;
@@ -1578,19 +1601,19 @@ function generateSchedules() {
     return;
   }
 
-  targetHC = weeklySummary.suggestedTarget;
+  let targetHC = weeklySummary.suggestedTarget;
 
   const hardCap = Math.ceil(
     Math.max(
       weeklySummary.suggestedTarget * 1.25,
-      weeklySummary.peakConcurrent * (cfg.operatingDays / Math.max(1, cfg.workingDays)) * 1.25
+      weeklySummary.peakConcurrent * (cfg.operatingDays / Math.max(1, cfg.workingDays)) * 1.20
     )
   );
 
   let attempts = 0;
   let solved = false;
 
-  while (attempts < 5 && !solved) {
+  while (attempts < 6 && !solved) {
     attempts++;
 
     generateBaseAgents(cfg, targetHC);
@@ -1601,7 +1624,7 @@ function generateSchedules() {
     const requiredRows = coverageRows.filter(r => Number(r.Required) > 0);
 
     const zeroScheduledRisk = requiredRows.some(r =>
-      Number(r.Required) >= 3 && Number(r["Scheduled Count"]) === 0
+      Number(r.Required) >= 2 && Number(r["Scheduled Count"]) === 0
     );
 
     const worstGap = requiredRows.length
@@ -1619,19 +1642,24 @@ function generateSchedules() {
         }, 0) / requiredRows.length
       : 1;
 
-    const acceptableGap = -Math.max(2, Math.ceil(weeklySummary.peakConcurrent * 0.10));
+    const edgeRows = requiredRows.filter((r, idx, arr) => idx < 4 || idx >= arr.length - 4);
+    const edgeCoverageRatio = edgeRows.length
+      ? edgeRows.reduce((sum, r) => {
+          const req = Number(r.Required);
+          const prod = Number(r["Productive Count"]);
+          return sum + Math.min(1, req > 0 ? prod / req : 1);
+        }, 0) / edgeRows.length
+      : 1;
 
-    if (!zeroScheduledRisk && worstGap >= acceptableGap && avgCoverageRatio >= 0.85) {
+    const acceptableGap = -Math.max(2, Math.ceil(weeklySummary.peakConcurrent * 0.08));
+
+    if (!zeroScheduledRisk && worstGap >= acceptableGap && avgCoverageRatio >= 0.90 && edgeCoverageRatio >= 0.92) {
       solved = true;
     } else {
-      const uplift = Math.max(2, Math.ceil(targetHC * 0.04));
+      const uplift = Math.max(2, Math.ceil(targetHC * 0.03));
       const nextTarget = Math.min(hardCap, targetHC + uplift);
-
-      if (nextTarget === targetHC) {
-        solved = true;
-      } else {
-        targetHC = nextTarget;
-      }
+      if (nextTarget === targetHC) solved = true;
+      else targetHC = nextTarget;
     }
   }
 
