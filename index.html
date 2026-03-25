@@ -300,7 +300,7 @@
 
   .chart-box{
     position:relative;
-    height:300px;
+    height:320px;
     margin-top:20px;
     background:rgba(8,18,35,.55);
     border:1px solid rgba(95,137,204,.18);
@@ -882,6 +882,8 @@
             <th>Required</th>
             <th>Scheduled Count</th>
             <th>Productive Count</th>
+            <th>AUX</th>
+            <th>Adjusted Productive</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -900,6 +902,7 @@
             <th>Required</th>
             <th>Productive Coverage</th>
             <th>Over / Under</th>
+            <th>Adjusted Over / Under</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -919,6 +922,122 @@
 </div>
 
 <div class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px;" onclick="toggleAuxPlanner()">
+    <div>
+      <h2 style="margin:0;">Smart AUX Planner</h2>
+      <div class="small-note" style="margin-top:6px;">Use this to place coaching, training, meetings, or wellness in the best available slot with the lowest coverage impact.</div>
+    </div>
+    <div id="auxToggle" class="status-pill" style="margin-top:0;">Collapsed</div>
+  </div>
+
+  <div id="auxPlannerBody" class="hidden" style="margin-top:16px;">
+    <div class="field-grid">
+      <div class="field">
+        <label for="auxType">Activity Type</label>
+        <select id="auxType">
+          <option value="Coaching">Coaching</option>
+          <option value="Refresher Training">Refresher Training</option>
+          <option value="Meeting">Meeting</option>
+          <option value="Wellness">Wellness</option>
+          <option value="1:1">1:1</option>
+          <option value="Calibration">Calibration</option>
+          <option value="Huddle">Huddle</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="auxWeek">Week</label>
+        <select id="auxWeek"></select>
+      </div>
+      <div class="field">
+        <label for="auxPlacementStyle">Placement Style</label>
+        <select id="auxPlacementStyle" onchange="updateAuxPlannerUI()">
+          <option value="single">Single Best Slot</option>
+          <option value="distributed">Distributed Best Slots</option>
+          <option value="weekly">Complete Weekly Allocation</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="auxDayMode">Day Selection</label>
+        <select id="auxDayMode" onchange="updateAuxPlannerUI()">
+          <option value="single">Single Day</option>
+          <option value="multiple">Multiple Days</option>
+        </select>
+      </div>
+      <div class="field" id="auxSingleDayWrap">
+        <label for="auxDay">Day</label>
+        <select id="auxDay">
+          <option>Mon</option>
+          <option>Tue</option>
+          <option>Wed</option>
+          <option>Thu</option>
+          <option>Fri</option>
+          <option>Sat</option>
+          <option>Sun</option>
+        </select>
+      </div>
+      <div class="field hidden" id="auxMultiDayWrap" style="grid-column: span 2;">
+        <label>Selected Days</label>
+        <div id="auxDayMulti" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
+          <label class="status-pill"><input type="checkbox" value="Mon" checked> Mon</label>
+          <label class="status-pill"><input type="checkbox" value="Tue" checked> Tue</label>
+          <label class="status-pill"><input type="checkbox" value="Wed" checked> Wed</label>
+          <label class="status-pill"><input type="checkbox" value="Thu" checked> Thu</label>
+          <label class="status-pill"><input type="checkbox" value="Fri" checked> Fri</label>
+          <label class="status-pill"><input type="checkbox" value="Sat"> Sat</label>
+          <label class="status-pill"><input type="checkbox" value="Sun"> Sun</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="auxDuration">Duration (mins)</label>
+        <select id="auxDuration">
+          <option value="30">30</option>
+          <option value="60" selected>60</option>
+          <option value="90">90</option>
+          <option value="120">120</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="auxTargetMode">Target Group</label>
+        <select id="auxTargetMode" onchange="updateAuxPlannerUI()">
+          <option value="custom">Custom Count</option>
+          <option value="all">All Agents</option>
+        </select>
+      </div>
+      <div class="field" id="auxAgentsWrap">
+        <label for="auxAgents">Agents Needed</label>
+        <input id="auxAgents" type="number" min="1" value="5">
+      </div>
+      <div class="field">
+        <label for="auxMaxPerSlot">Max Agents Per Slot</label>
+        <input id="auxMaxPerSlot" type="number" min="1" value="3">
+      </div>
+      <div class="field">
+        <label for="auxStart">Earliest Start</label>
+        <input id="auxStart" type="time" value="09:00">
+      </div>
+      <div class="field">
+        <label for="auxEnd">Latest End</label>
+        <input id="auxEnd" type="time" value="18:00">
+      </div>
+      <div class="field">
+        <label for="auxPreserveGap">Minimum Gap Buffer to Preserve</label>
+        <input id="auxPreserveGap" type="number" value="0" step="1">
+      </div>
+    </div>
+
+    <div class="small-note" style="margin-top:10px;" id="auxModeNote">Single Best Slot places all selected agents in one continuous slot.</div>
+
+    <div class="button-row" style="margin-top:14px;">
+      <button type="button" onclick="findBestAuxSlot()">Find Best Slot</button>
+      <button type="button" onclick="applyAuxRecommendation()">Apply AUX</button>
+      <button type="button" onclick="clearSelectedWeekAux()">Clear Selected Week AUX</button>
+    </div>
+
+    <div id="auxResult" class="result-box" style="margin-top:14px;">Generate schedules first, then find the best AUX slot.</div>
+  </div>
+</div>
+
+<div class="section">
   <h2>Planner Summary</h2>
   <div id="plannerSummary" class="result-box">Generate schedules to see planner insights.</div>
 </div>
@@ -934,6 +1053,10 @@
     <button type="button" onclick="downloadAllWeeksWeeklyCSV()">Download All Weeks Weekly Schedule</button>
     <button type="button" onclick="downloadAllWeeksDailyCSV()">Download All Weeks Daily Schedule</button>
     <button type="button" onclick="downloadAllWeeksCoverageCSV()">Download All Weeks Coverage Summary</button>
+  </div>
+  <div class="button-row" style="margin-top:10px;">
+    <button type="button" onclick="downloadSelectedWeekAuxCSV()">Download Selected Week AUX Schedule</button>
+    <button type="button" onclick="downloadAllWeeksAuxCSV()">Download All Weeks AUX Schedule</button>
   </div>
 </div>
 
@@ -964,6 +1087,16 @@ let dailyTotalsChart = null;
 let gapChart = null;
 let startDistChart = null;
 let weeklyViewChart = null;
+let auxRecommendation = null;
+
+function escapeHtml(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function parseTimeToMin(str) {
   if (!str || !String(str).includes(":")) return 0;
@@ -1078,6 +1211,7 @@ function updateWeekControls() {
 
   renderWeekTabs();
   renderRequirementPreview();
+  refreshAuxWeekOptions();
 }
 
 function triggerRequirementUpload() {
@@ -1281,6 +1415,467 @@ updateDerivedDisplays();
 updateWeekControls();
 updateUploadStatusText();
 initHelpTooltips();
+refreshAuxWeekOptions();
+
+function toggleAuxPlanner() {
+  const body = document.getElementById("auxPlannerBody");
+  const toggle = document.getElementById("auxToggle");
+  if (!body || !toggle) return;
+  const opening = body.classList.contains("hidden");
+  body.classList.toggle("hidden", !opening);
+  toggle.innerText = opening ? "Expanded" : "Collapsed";
+}
+
+function refreshAuxWeekOptions() {
+  const auxWeek = document.getElementById("auxWeek");
+  if (!auxWeek) return;
+  const current = String(activeWeekIndex || 1);
+  auxWeek.innerHTML = "";
+  const horizon = getPlanningHorizon();
+  for (let i = 1; i <= horizon; i++) {
+    auxWeek.innerHTML += `<option value="${i}">Week ${i}</option>`;
+  }
+  auxWeek.value = current;
+}
+
+function ensureAuxStructures(result) {
+  if (!result) return;
+  if (!Array.isArray(result.auxActivities)) result.auxActivities = [];
+  (result.coverageRows || []).forEach(r => {
+    r.AUX = Number(r.AUX || 0);
+    r["Adjusted Productive"] = Number((Number(r["Productive Count"] || 0) - r.AUX).toFixed(2));
+  });
+  (result.gapRows || []).forEach(r => {
+    r.AUX = Number(r.AUX || 0);
+    r["Adjusted Productive Coverage"] = Number((Number(r["Productive Coverage"] || 0) - r.AUX).toFixed(2));
+    r["Adjusted Over/Under"] = Number((r["Adjusted Productive Coverage"] - Number(r.Required || 0)).toFixed(2));
+  });
+}
+
+function getDayIntervalsForAux(result, day) {
+  return (result?.coverageRows || []).filter(r => r.Day === day).map(r => ({
+    interval: r.Interval,
+    required: Number(r.Required || 0),
+    productive: Number(r["Productive Count"] || 0),
+    aux: Number(r.AUX || 0),
+    adjusted: Number(r["Adjusted Productive"] != null ? r["Adjusted Productive"] : (Number(r["Productive Count"] || 0) - Number(r.AUX || 0)))
+  }));
+}
+
+function updateAuxPlannerUI() {
+  const placementStyle = document.getElementById("auxPlacementStyle")?.value || "single";
+  const dayMode = document.getElementById("auxDayMode")?.value || "single";
+  const targetMode = document.getElementById("auxTargetMode")?.value || "custom";
+  const multi = placementStyle !== "single" || dayMode === "multiple";
+
+  const singleWrap = document.getElementById("auxSingleDayWrap");
+  const multiWrap = document.getElementById("auxMultiDayWrap");
+  const agentsWrap = document.getElementById("auxAgentsWrap");
+  const maxPerSlot = document.getElementById("auxMaxPerSlot");
+  const note = document.getElementById("auxModeNote");
+
+  if (singleWrap) singleWrap.classList.toggle("hidden", multi);
+  if (multiWrap) multiWrap.classList.toggle("hidden", !multi);
+  if (agentsWrap) agentsWrap.classList.toggle("hidden", targetMode === "all");
+  if (maxPerSlot) maxPerSlot.disabled = placementStyle === "single";
+
+  if (note) {
+    if (placementStyle === "single") {
+      note.textContent = "Single Best Slot places all selected agents in one continuous slot.";
+    } else if (placementStyle === "distributed") {
+      note.textContent = "Distributed Best Slots spreads agents across the safest windows within the selected days.";
+    } else {
+      note.textContent = "Complete Weekly Allocation tries to schedule the full target group across the selected days for this week.";
+    }
+  }
+}
+
+function getSelectedAuxDays() {
+  const placementStyle = document.getElementById("auxPlacementStyle")?.value || "single";
+  const dayMode = document.getElementById("auxDayMode")?.value || "single";
+  if (placementStyle === "single" && dayMode === "single") {
+    return [document.getElementById("auxDay").value];
+  }
+  const checked = Array.from(document.querySelectorAll('#auxDayMulti input[type="checkbox"]:checked')).map(el => el.value);
+  return checked.length ? checked : [document.getElementById("auxDay").value];
+}
+
+function getAuxTargetAgents(result) {
+  const targetMode = document.getElementById("auxTargetMode")?.value || "custom";
+  if (targetMode === "all") {
+    return Math.max(1, Number(result?.generatedAgents?.length || 0));
+  }
+  return Math.max(1, Number(document.getElementById("auxAgents").value || 1));
+}
+
+function buildAuxCandidate(dayRows, duration, earliest, latest, preserveGap, provisionalLoad, day, allocAgents) {
+  const blocks = Math.max(1, Math.round(duration / Math.max(1, dayRows.length ? (parseTimeToMin(dayRows[1]?.interval || dayRows[0].interval) - parseTimeToMin(dayRows[0].interval) || 30) : 30)));
+  const candidates = [];
+
+  for (let i = 0; i <= dayRows.length - blocks; i++) {
+    const slice = dayRows.slice(i, i + blocks);
+    const startMin = parseTimeToMin(slice[0].interval);
+    const endMin = startMin + duration;
+    if (startMin < earliest || endMin > latest) continue;
+
+    let negativeIntervals = 0;
+    let negativeDepth = 0;
+    let surplusLoss = 0;
+    let worstAdjustedGap = Infinity;
+    const impacts = [];
+    let safeCapacity = Infinity;
+
+    slice.forEach(row => {
+      const key = `${day}|${row.interval}`;
+      const currentLoad = Number(provisionalLoad[key] || 0);
+      const beforeAdjusted = Number((row.adjusted - currentLoad).toFixed(2));
+      const beforeGap = Number((beforeAdjusted - row.required).toFixed(2));
+      const afterAdjusted = Number((beforeAdjusted - allocAgents).toFixed(2));
+      const afterGap = Number((afterAdjusted - row.required).toFixed(2));
+      const localSafeCap = Math.max(0, Math.floor(beforeGap - preserveGap));
+      safeCapacity = Math.min(safeCapacity, localSafeCap);
+      if (afterGap < preserveGap) {
+        negativeIntervals += 1;
+        negativeDepth += Math.abs(afterGap - preserveGap);
+      }
+      surplusLoss += Math.max(0, beforeGap - afterGap);
+      worstAdjustedGap = Math.min(worstAdjustedGap, afterGap);
+      impacts.push({ interval: row.interval, beforeGap, afterAdjusted, afterGap });
+    });
+
+    const score = (negativeIntervals * 100000) + (negativeDepth * 1000) + (surplusLoss * 10) + Math.max(0, 5 - worstAdjustedGap);
+    candidates.push({
+      score,
+      day,
+      start: slice[0].interval,
+      end: formatMinToTime(parseTimeToMin(slice[0].interval) + duration),
+      intervals: slice.map(r => r.interval),
+      impacts,
+      negativeIntervals,
+      worstAdjustedGap,
+      safeCapacity: Number.isFinite(safeCapacity) ? Math.max(0, safeCapacity) : 0,
+      allocAgents
+    });
+  }
+  return candidates;
+}
+
+function applyAuxLoadsToResult(result, provisionalLoad) {
+  ensureAuxStructures(result);
+  (result.coverageRows || []).forEach(row => {
+    const key = `${row.Day}|${row.Interval}`;
+    row.AUX = Number((provisionalLoad[key] || 0).toFixed(2));
+    row["Adjusted Productive"] = Number((Number(row["Productive Count"] || 0) - row.AUX).toFixed(2));
+  });
+  (result.gapRows || []).forEach(row => {
+    const key = `${row.Day}|${row.Interval}`;
+    row.AUX = Number((provisionalLoad[key] || 0).toFixed(2));
+    row["Adjusted Productive Coverage"] = Number((Number(row["Productive Coverage"] || 0) - row.AUX).toFixed(2));
+    row["Adjusted Over/Under"] = Number((row["Adjusted Productive Coverage"] - Number(row.Required || 0)).toFixed(2));
+  });
+}
+
+function getAuxSlotKey(day, start, end) {
+  return `${day}|${start}|${end}`;
+}
+
+function mergeAuxPlanEntries(plan) {
+  const mergedMap = new Map();
+  (plan || []).forEach(entry => {
+    const key = getAuxSlotKey(entry.day, entry.start, entry.end);
+    if (!mergedMap.has(key)) {
+      mergedMap.set(key, {
+        day: entry.day,
+        start: entry.start,
+        end: entry.end,
+        intervals: Array.isArray(entry.intervals) ? entry.intervals.slice() : [],
+        impacts: Array.isArray(entry.impacts) ? entry.impacts.slice() : [],
+        agents: Number(entry.agents || 0),
+        worstAdjustedGap: Number(entry.worstAdjustedGap || 0),
+        negativeIntervals: Number(entry.negativeIntervals || 0)
+      });
+      return;
+    }
+    const current = mergedMap.get(key);
+    current.agents = Number((current.agents + Number(entry.agents || 0)).toFixed(2));
+    current.worstAdjustedGap = Math.min(Number(current.worstAdjustedGap || 0), Number(entry.worstAdjustedGap || 0));
+    current.negativeIntervals = Math.max(Number(current.negativeIntervals || 0), Number(entry.negativeIntervals || 0));
+    const intervalSet = new Set([...(current.intervals || []), ...((entry.intervals || []))]);
+    current.intervals = Array.from(intervalSet).sort((a, b) => parseTimeToMin(a) - parseTimeToMin(b));
+    const impactMap = new Map();
+    [...(current.impacts || []), ...((entry.impacts || []))].forEach(impact => {
+      if (!impact || !impact.interval) return;
+      impactMap.set(impact.interval, impact);
+    });
+    current.impacts = Array.from(impactMap.values()).sort((a, b) => parseTimeToMin(a.interval) - parseTimeToMin(b.interval));
+  });
+  return Array.from(mergedMap.values()).sort((a, b) => {
+    const dayDiff = DAYS.indexOf(a.day) - DAYS.indexOf(b.day);
+    if (dayDiff !== 0) return dayDiff;
+    return parseTimeToMin(a.start) - parseTimeToMin(b.start);
+  });
+}
+
+function buildAuxSlotCapacityMap(result, days, duration, earliest, latest, preserveGap) {
+  const map = {};
+  (days || []).forEach(day => {
+    const rows = getDayIntervalsForAux(result, day);
+    buildAuxCandidate(rows, duration, earliest, latest, preserveGap, {}, day, 1).forEach(candidate => {
+      const key = getAuxSlotKey(candidate.day, candidate.start, candidate.end);
+      map[key] = Math.max(0, Number(candidate.safeCapacity || 0));
+    });
+  });
+  return map;
+}
+
+function renderAuxRecommendationResult(recommendation) {
+  if (!recommendation) return;
+  const mergedPlan = mergeAuxPlanEntries(recommendation.plan || []);
+  const planRows = mergedPlan.map((p, idx) => `<tr><td>${idx + 1}</td><td>${escapeHtml(p.day)}</td><td>${escapeHtml(p.start)} to ${escapeHtml(p.end)}</td><td>${Number(p.agents).toFixed(0)}</td><td>${Number(p.worstAdjustedGap).toFixed(2)}</td></tr>`).join("");
+  const targetLabel = recommendation.targetMode === "all" ? `All Agents (${recommendation.totalAgents})` : recommendation.totalAgents;
+  document.getElementById("auxResult").innerHTML = `
+    <div class="summary-item"><strong>Recommendation Ready:</strong> ${escapeHtml(recommendation.type)} • Week ${recommendation.week} • ${escapeHtml(recommendation.modeLabel)}</div>
+    <div class="summary-item"><strong>Target Group:</strong> ${targetLabel} • <strong>Duration:</strong> ${recommendation.duration} mins • <strong>Selected Days:</strong> ${recommendation.days.join(", ")}</div>
+    <div class="summary-item"><strong>Planned Agents:</strong> ${recommendation.assignedAgents} of ${recommendation.totalAgents}</div>
+    <div class="summary-item"><strong>Warning:</strong> ${escapeHtml(recommendation.warning)}</div>
+    <div style="overflow:auto;margin-top:10px;">
+      <table>
+        <thead><tr><th>Batch</th><th>Day</th><th>Slot</th><th>Agents</th><th>Worst Adjusted Gap</th></tr></thead>
+        <tbody>${planRows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function findBestAuxSlot() {
+  const result = multiWeekResults.find(r => r.week === Number(document.getElementById("auxWeek").value || activeWeekIndex));
+  if (!result) {
+    document.getElementById("auxResult").innerHTML = "Generate schedules first, then find the best AUX slot.";
+    return;
+  }
+
+  ensureAuxStructures(result);
+  const placementStyle = document.getElementById("auxPlacementStyle").value;
+  const duration = Number(document.getElementById("auxDuration").value || 0);
+  const totalAgents = getAuxTargetAgents(result);
+  const earliest = parseTimeToMin(document.getElementById("auxStart").value);
+  const latest = parseTimeToMin(document.getElementById("auxEnd").value);
+  const preserveGap = Number(document.getElementById("auxPreserveGap").value || 0);
+  const days = getSelectedAuxDays();
+  const maxPerSlot = Math.max(1, Number(document.getElementById("auxMaxPerSlot").value || 1));
+  const provisionalLoad = {};
+  const plan = [];
+  const slotCapacityMap = buildAuxSlotCapacityMap(result, days, duration, earliest, latest, preserveGap);
+  const slotUsedMap = {};
+  let assignedAgents = 0;
+  let remaining = totalAgents;
+
+  if (!days.length) {
+    auxRecommendation = null;
+    document.getElementById("auxResult").innerHTML = `<div class="summary-item"><strong>Select at least one day.</strong></div>`;
+    return;
+  }
+
+  const modeLabel = placementStyle === "single" ? "Single Best Slot" : (placementStyle === "distributed" ? "Distributed Best Slots" : "Complete Weekly Allocation");
+
+  if (placementStyle === "single") {
+    const allocAgents = totalAgents;
+    let best = null;
+    days.forEach(day => {
+      const dayRows = getDayIntervalsForAux(result, day);
+      buildAuxCandidate(dayRows, duration, earliest, latest, preserveGap, provisionalLoad, day, allocAgents).forEach(candidate => {
+        if (!best || candidate.score < best.score) best = candidate;
+      });
+    });
+    if (!best) {
+      auxRecommendation = null;
+      document.getElementById("auxResult").innerHTML = `<div class="summary-item"><strong>No valid slot found.</strong> Try widening the start and end range or reducing duration.</div>`;
+      return;
+    }
+    plan.push({ ...best, agents: allocAgents });
+    assignedAgents = allocAgents;
+    remaining = 0;
+  } else {
+    const batchCap = Math.max(1, Math.min(maxPerSlot, totalAgents));
+    let guard = 0;
+    while (remaining > 0 && guard < 500) {
+      guard += 1;
+      let best = null;
+
+      days.forEach(day => {
+        const dayRows = getDayIntervalsForAux(result, day);
+        if (!dayRows.length) return;
+        let localCandidates = buildAuxCandidate(dayRows, duration, earliest, latest, preserveGap, provisionalLoad, day, 1);
+        if (!localCandidates.length) return;
+
+        localCandidates = localCandidates
+          .map(candidate => {
+            const slotKey = getAuxSlotKey(candidate.day, candidate.start, candidate.end);
+            const baseCapacity = Number(slotCapacityMap[slotKey] || 0);
+            const alreadyUsed = Number(slotUsedMap[slotKey] || 0);
+            const remainingCapacity = Math.max(0, baseCapacity - alreadyUsed);
+            return { ...candidate, slotKey, remainingCapacity };
+          })
+          .filter(candidate => candidate.remainingCapacity > 0 || !slotUsedMap[candidate.slotKey]);
+
+        if (!localCandidates.length) return;
+
+        const safeCandidates = localCandidates
+          .filter(candidate => candidate.remainingCapacity > 0)
+          .map(candidate => {
+            const allocAgents = Math.min(batchCap, remaining, candidate.remainingCapacity);
+            if (allocAgents <= 0) return null;
+            const rescored = buildAuxCandidate(dayRows, duration, earliest, latest, preserveGap, provisionalLoad, day, allocAgents)
+              .find(c => c.start === candidate.start && c.end === candidate.end);
+            if (!rescored) return null;
+            return { ...rescored, slotKey: candidate.slotKey, remainingCapacity: candidate.remainingCapacity, allocAgents };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.score - b.score);
+
+        let candidate = safeCandidates[0] || null;
+
+        if (!candidate) {
+          const fallback = localCandidates
+            .filter(candidate => !slotUsedMap[candidate.slotKey])
+            .sort((a, b) => a.score - b.score)[0];
+          if (!fallback) return;
+          const allocAgents = Math.min(batchCap, remaining);
+          const rescored = buildAuxCandidate(dayRows, duration, earliest, latest, preserveGap, provisionalLoad, day, allocAgents)
+            .find(c => c.start === fallback.start && c.end === fallback.end) || fallback;
+          candidate = { ...rescored, slotKey: fallback.slotKey, remainingCapacity: 0, allocAgents };
+        }
+
+        if (!best || candidate.score < best.score) best = candidate;
+      });
+
+      if (!best) break;
+
+      const allocAgents = Math.min(remaining, Math.max(1, Number(best.allocAgents || batchCap)));
+      const finalBest = { ...best, agents: allocAgents };
+      plan.push(finalBest);
+      finalBest.intervals.forEach(interval => {
+        const key = `${finalBest.day}|${interval}`;
+        provisionalLoad[key] = Number((Number(provisionalLoad[key] || 0) + allocAgents).toFixed(2));
+      });
+      slotUsedMap[finalBest.slotKey] = Number((Number(slotUsedMap[finalBest.slotKey] || 0) + allocAgents).toFixed(2));
+      remaining -= allocAgents;
+      assignedAgents += allocAgents;
+
+      if ((placementStyle === "distributed" || placementStyle === "weekly") && plan.length > 250) break;
+    }
+  }
+
+  if (!plan.length) {
+    auxRecommendation = null;
+    document.getElementById("auxResult").innerHTML = `<div class="summary-item"><strong>No valid slots found.</strong> Try widening the time range or lowering max agents per slot.</div>`;
+    return;
+  }
+
+  const mergedPlan = mergeAuxPlanEntries(plan);
+  assignedAgents = Number(mergedPlan.reduce((sum, entry) => sum + Number(entry.agents || 0), 0).toFixed(2));
+  remaining = Math.max(0, Number((totalAgents - assignedAgents).toFixed(2)));
+
+  const warning = remaining > 0
+    ? `Only ${assignedAgents} of ${totalAgents} agents could be scheduled within the selected days and time range.`
+    : (mergedPlan.some(p => Number(p.negativeIntervals || 0) > 0)
+      ? `Best available plan found. Some selected slots still go below the preserved gap buffer.`
+      : "Safe plan found with no preserved-gap breach.");
+
+  auxRecommendation = {
+    week: result.week,
+    type: document.getElementById("auxType").value,
+    duration,
+    totalAgents,
+    assignedAgents,
+    preserveGap,
+    days,
+    targetMode: document.getElementById("auxTargetMode").value,
+    placementStyle,
+    modeLabel,
+    warning,
+    plan: mergedPlan.map(p => ({
+      day: p.day,
+      start: p.start,
+      end: p.end,
+      intervals: p.intervals.slice(),
+      impacts: (p.impacts || []).slice(),
+      agents: p.agents,
+      worstAdjustedGap: p.worstAdjustedGap,
+      negativeIntervals: p.negativeIntervals || 0
+    }))
+  };
+
+  renderAuxRecommendationResult(auxRecommendation);
+}
+
+function applyAuxRecommendation() {
+  if (!auxRecommendation) {
+    document.getElementById("auxResult").innerHTML = `<div class="summary-item"><strong>No recommendation ready.</strong> Click Find Best Slot first.</div>`;
+    return;
+  }
+  const result = multiWeekResults.find(r => r.week === auxRecommendation.week);
+  if (!result) return;
+
+  ensureAuxStructures(result);
+  const activityId = `AUX-${Date.now()}`;
+  const existingLoad = {};
+  (result.coverageRows || []).forEach(row => {
+    existingLoad[`${row.Day}|${row.Interval}`] = Number(row.AUX || 0);
+  });
+
+  auxRecommendation.plan.forEach((entry, idx) => {
+    result.auxActivities.push({
+      id: `${activityId}-${idx + 1}`,
+      type: auxRecommendation.type,
+      duration: auxRecommendation.duration,
+      day: entry.day,
+      start: entry.start,
+      end: entry.end,
+      intervals: entry.intervals.slice(),
+      agents: entry.agents,
+      placementStyle: auxRecommendation.placementStyle,
+      targetMode: auxRecommendation.targetMode,
+      warning: auxRecommendation.warning
+    });
+    entry.intervals.forEach(interval => {
+      const key = `${entry.day}|${interval}`;
+      existingLoad[key] = Number((Number(existingLoad[key] || 0) + entry.agents).toFixed(2));
+    });
+  });
+
+  applyAuxLoadsToResult(result, existingLoad);
+
+  if (activeWeekIndex === result.week) renderWeekResult(result.week);
+
+  document.getElementById("auxResult").innerHTML = `
+    <div class="summary-item"><strong>AUX Applied:</strong> ${escapeHtml(auxRecommendation.type)} added to Week ${result.week}.</div>
+    <div class="summary-item"><strong>Batches Applied:</strong> ${auxRecommendation.plan.length} • <strong>Agents Scheduled:</strong> ${auxRecommendation.assignedAgents} of ${auxRecommendation.totalAgents}</div>
+    <div class="summary-item"><strong>Status:</strong> Selected week tables and charts updated.</div>
+  `;
+}
+
+function clearSelectedWeekAux() {
+  const result = getSelectedWeekResult();
+  if (!result) {
+    document.getElementById("auxResult").innerHTML = "Generate schedules first, then use Smart AUX Planner.";
+    return;
+  }
+  result.auxActivities = [];
+  ensureAuxStructures(result);
+  result.coverageRows.forEach(row => {
+    row.AUX = 0;
+    row["Adjusted Productive"] = Number(row["Productive Count"] || 0);
+  });
+  result.gapRows.forEach(row => {
+    row.AUX = 0;
+    row["Adjusted Productive Coverage"] = Number(row["Productive Coverage"] || 0);
+    row["Adjusted Over/Under"] = Number((Number(row["Productive Coverage"] || 0) - Number(row.Required || 0)).toFixed(2));
+  });
+  renderWeekResult(result.week);
+  auxRecommendation = null;
+  document.getElementById("auxResult").innerHTML = `<div class="summary-item"><strong>Selected week AUX cleared.</strong> Tables and charts were reset to the base schedule.</div>`;
+}
 
 function downloadTextFile(content, fileName, mimeType) {
   const blob = new Blob([content], { type: mimeType });
@@ -2020,22 +2615,48 @@ function buildCoverageOutputs(cfg, carryInAgents = []) {
   });
 }
 
-function chartOptions(yTitle) {
+function chartOptions(yTitle, extra = {}) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
     plugins: {
-      legend: { position: "top" }
+      legend: {
+        position: "top",
+        labels: {
+          color: "#dceaff",
+          usePointStyle: true,
+          boxWidth: 10,
+          padding: 14,
+          font: { size: 11, weight: "700" }
+        }
+      },
+      tooltip: {
+        backgroundColor: "rgba(5,14,28,.96)",
+        borderColor: "rgba(72,177,255,.42)",
+        borderWidth: 1,
+        titleColor: "#ffffff",
+        bodyColor: "#dceaff",
+        padding: 10,
+        displayColors: true
+      }
     },
     scales: {
       x: {
-        title: { display: true, text: "Days / Start Times" }
+        grid: { display: false },
+        border: { color: "rgba(95,137,204,.18)" },
+        ticks: { color: "#a8bfdc", font: { size: 11, weight: "600" } },
+        title: { display: true, text: extra.xTitle || "Days / Start Times", color: "#8fb2df", font: { size: 11, weight: "700" } }
       },
       y: {
         beginAtZero: true,
-        title: { display: true, text: yTitle }
+        grid: { color: "rgba(95,137,204,.12)" },
+        border: { color: "rgba(95,137,204,.18)" },
+        ticks: { color: "#a8bfdc", font: { size: 11, weight: "600" } },
+        title: { display: true, text: yTitle, color: "#8fb2df", font: { size: 11, weight: "700" } }
       }
-    }
+    },
+    ...extra
   };
 }
 
@@ -2050,9 +2671,20 @@ function drawCharts(cfg) {
   safeDestroy(weeklyViewChart);
 
   const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
+  const barStyle = {
+    borderRadius: 10,
+    borderSkipped: false,
+    maxBarThickness: 30,
+    categoryPercentage: 0.66,
+    barPercentage: 0.84
+  };
+
   const dayTotalsRequired = openDays.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
   const dayTotalsProductive = openDays.map(day =>
-    coverageRows.filter(r => r.Day === day).reduce((s, r) => s + r["Productive Count"], 0)
+    coverageRows.filter(r => r.Day === day).reduce((s, r) => s + Number(r["Productive Count"] || 0), 0)
+  );
+  const dayTotalsAdjusted = openDays.map(day =>
+    coverageRows.filter(r => r.Day === day).reduce((s, r) => s + Number(r["Adjusted Productive"] != null ? r["Adjusted Productive"] : Number(r["Productive Count"] || 0) - Number(r.AUX || 0)), 0)
   );
 
   dailyTotalsChart = new Chart(document.getElementById("dailyTotalsChart"), {
@@ -2060,24 +2692,36 @@ function drawCharts(cfg) {
     data: {
       labels: openDays,
       datasets: [
-        { label: "Required", data: dayTotalsRequired },
-        { label: "Productive Coverage", data: dayTotalsProductive }
+        { ...barStyle, label: "Required", data: dayTotalsRequired, backgroundColor: "rgba(54, 140, 255, .72)", borderColor: "rgba(54, 140, 255, .95)", borderWidth: 1 },
+        { ...barStyle, label: "Productive Coverage", data: dayTotalsProductive, backgroundColor: "rgba(255, 191, 71, .58)", borderColor: "rgba(255, 191, 71, .92)", borderWidth: 1 },
+        { type: "line", label: "Adjusted Coverage", data: dayTotalsAdjusted, borderColor: "rgba(21, 230, 255, .96)", backgroundColor: "rgba(21, 230, 255, .18)", pointBackgroundColor: "rgba(21, 230, 255, .96)", pointBorderColor: "#03101c", pointRadius: 4, pointHoverRadius: 5, borderWidth: 2.5, tension: 0.28, fill: false }
       ]
     },
-    options: chartOptions("Total Daily Coverage")
+    options: chartOptions("Total Daily Coverage", { xTitle: "Open Days" })
   });
 
   const dayGapTotals = openDays.map(day =>
-    gapRows.filter(r => r.Day === day).reduce((s, r) => s + r["Over/Under"], 0)
+    gapRows.filter(r => r.Day === day).reduce((s, r) => s + Number(r["Over/Under"] || 0), 0)
+  );
+  const dayAdjustedGapTotals = openDays.map(day =>
+    gapRows.filter(r => r.Day === day).reduce((s, r) => s + Number(r["Adjusted Over/Under"] != null ? r["Adjusted Over/Under"] : r["Over/Under"] || 0), 0)
   );
 
   gapChart = new Chart(document.getElementById("gapChart"), {
     type: "bar",
     data: {
       labels: openDays,
-      datasets: [{ label: "Daily Over / Under", data: dayGapTotals }]
+      datasets: [
+        { ...barStyle, label: "Daily Over / Under", data: dayGapTotals, backgroundColor: "rgba(139, 92, 246, .58)", borderColor: "rgba(139, 92, 246, .92)", borderWidth: 1 },
+        { type: "line", label: "Adjusted Over / Under", data: dayAdjustedGapTotals, borderColor: "rgba(255, 107, 122, .96)", backgroundColor: "rgba(255, 107, 122, .14)", pointBackgroundColor: "rgba(255, 107, 122, .96)", pointRadius: 4, pointHoverRadius: 5, borderWidth: 2.5, tension: 0.24, fill: false }
+      ]
     },
-    options: chartOptions("Gap")
+    options: chartOptions("Gap", {
+      xTitle: "Open Days",
+      plugins: {
+        annotation: undefined
+      }
+    })
   });
 
   const startCountMap = {};
@@ -2093,9 +2737,9 @@ function drawCharts(cfg) {
     type: "bar",
     data: {
       labels: startLabels,
-      datasets: [{ label: "Agents by Start Time", data: startCounts }]
+      datasets: [{ ...barStyle, label: "Agents by Start Time", data: startCounts, backgroundColor: "rgba(54, 227, 156, .62)", borderColor: "rgba(54, 227, 156, .96)", borderWidth: 1 }]
     },
-    options: chartOptions("Headcount")
+    options: chartOptions("Headcount", { xTitle: "Shift Start Times" })
   });
 
   const weeklyCanvas = document.getElementById("weeklyViewChart");
@@ -2109,38 +2753,74 @@ function drawCharts(cfg) {
     const weekProductive = multiWeekResults.length
       ? multiWeekResults.map(r => (r.coverageRows || []).reduce((s, row) => s + Number(row["Productive Count"] || 0), 0))
       : [coverageRows.reduce((s, row) => s + Number(row["Productive Count"] || 0), 0)];
-    const weekGap = multiWeekResults.length
-      ? multiWeekResults.map(r => Number(r.netGapTotal || 0))
-      : [gapRows.reduce((s, row) => s + Number(row["Over/Under"] || 0), 0)];
-    const selectedWeekGap = weekGap.map((value, idx) => (idx + 1 === activeWeekIndex ? value : null));
+    const weekAdjusted = multiWeekResults.length
+      ? multiWeekResults.map(r => (r.coverageRows || []).reduce((s, row) => s + Number(row["Adjusted Productive"] != null ? row["Adjusted Productive"] : Number(row["Productive Count"] || 0) - Number(row.AUX || 0)), 0))
+      : [coverageRows.reduce((s, row) => s + Number(row["Adjusted Productive"] != null ? row["Adjusted Productive"] : Number(row["Productive Count"] || 0) - Number(row.AUX || 0)), 0)];
+    const weekAdjustedGap = multiWeekResults.length
+      ? multiWeekResults.map(r => (r.gapRows || []).reduce((s, row) => s + Number(row["Adjusted Over/Under"] != null ? row["Adjusted Over/Under"] : row["Over/Under"] || 0), 0))
+      : [gapRows.reduce((s, row) => s + Number(row["Adjusted Over/Under"] != null ? row["Adjusted Over/Under"] : row["Over/Under"] || 0), 0)];
     const selectedWeekRequired = weekRequired.map((value, idx) => (idx + 1 === activeWeekIndex ? value : null));
+    const selectedWeekAdjusted = weekAdjusted.map((value, idx) => (idx + 1 === activeWeekIndex ? value : null));
 
     weeklyViewChart = new Chart(weeklyCanvas, {
       data: {
         labels: weekLabels,
         datasets: [
-          { type: "bar", label: "Weekly Required", data: weekRequired },
-          { type: "bar", label: "Weekly Productive Coverage", data: weekProductive },
-          { type: "line", label: "Weekly Net Gap", data: weekGap, yAxisID: "y1", tension: 0.25 },
-          { type: "line", label: `Selected Week ${activeWeekIndex} Gap`, data: selectedWeekGap, yAxisID: "y1", tension: 0, spanGaps: false },
-          { type: "line", label: `Selected Week ${activeWeekIndex} Required`, data: selectedWeekRequired, tension: 0, spanGaps: false }
+          { ...barStyle, type: "bar", label: "Weekly Required", data: weekRequired, backgroundColor: "rgba(54, 140, 255, .62)", borderColor: "rgba(54, 140, 255, .95)", borderWidth: 1 },
+          { ...barStyle, type: "bar", label: "Weekly Productive", data: weekProductive, backgroundColor: "rgba(255, 191, 71, .52)", borderColor: "rgba(255, 191, 71, .9)", borderWidth: 1 },
+          { type: "line", label: "Weekly Adjusted Coverage", data: weekAdjusted, borderColor: "rgba(21, 230, 255, .96)", backgroundColor: "rgba(21, 230, 255, .16)", pointBackgroundColor: "rgba(21, 230, 255, .96)", pointRadius: 4, pointHoverRadius: 5, borderWidth: 2.5, tension: 0.28, fill: false },
+          { type: "line", label: "Adjusted Net Gap", data: weekAdjustedGap, yAxisID: "y1", borderColor: "rgba(255, 107, 122, .96)", backgroundColor: "rgba(255, 107, 122, .16)", pointBackgroundColor: "rgba(255, 107, 122, .96)", pointRadius: 4, pointHoverRadius: 5, borderWidth: 2.5, tension: 0.18, fill: false },
+          { type: "line", label: `Active Week ${activeWeekIndex} Required`, data: selectedWeekRequired, borderColor: "rgba(140, 196, 255, .95)", pointRadius: 0, pointHoverRadius: 0, borderDash: [5, 5], spanGaps: false, tension: 0, borderWidth: 2, fill: false },
+          { type: "line", label: `Active Week ${activeWeekIndex} Adjusted`, data: selectedWeekAdjusted, borderColor: "rgba(54, 227, 156, .96)", pointBackgroundColor: "rgba(54, 227, 156, .96)", pointRadius: 5, pointHoverRadius: 6, spanGaps: false, tension: 0, borderWidth: 2.2, fill: false }
         ]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { 
-          legend: { position: "top" },
-          title: { display: true, text: `Weekly Comparison View • Active Selection: Week ${activeWeekIndex}` }
-        },
+        ...chartOptions("Coverage", {
+          xTitle: "Weeks",
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                color: "#dceaff",
+                usePointStyle: true,
+                boxWidth: 10,
+                padding: 14,
+                font: { size: 11, weight: "700" }
+              }
+            },
+            tooltip: {
+              backgroundColor: "rgba(5,14,28,.96)",
+              borderColor: "rgba(72,177,255,.42)",
+              borderWidth: 1,
+              titleColor: "#ffffff",
+              bodyColor: "#dceaff",
+              padding: 10,
+              displayColors: true
+            },
+            title: { display: true, text: `Weekly Comparison View • Active Selection: Week ${activeWeekIndex}`, color: "#dceaff", font: { size: 12, weight: "700" }, padding: { bottom: 10 } }
+          }
+        }),
         scales: {
-          x: { title: { display: true, text: "Weeks" } },
-          y: { beginAtZero: true, title: { display: true, text: "Coverage" } },
+          x: {
+            grid: { display: false },
+            border: { color: "rgba(95,137,204,.18)" },
+            ticks: { color: "#a8bfdc", font: { size: 11, weight: "600" } },
+            title: { display: true, text: "Weeks", color: "#8fb2df", font: { size: 11, weight: "700" } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(95,137,204,.12)" },
+            border: { color: "rgba(95,137,204,.18)" },
+            ticks: { color: "#a8bfdc", font: { size: 11, weight: "600" } },
+            title: { display: true, text: "Coverage", color: "#8fb2df", font: { size: 11, weight: "700" } }
+          },
           y1: {
             beginAtZero: false,
             position: "right",
             grid: { drawOnChartArea: false },
-            title: { display: true, text: "Net Gap" }
+            border: { color: "rgba(95,137,204,.18)" },
+            ticks: { color: "#a8bfdc", font: { size: 11, weight: "600" } },
+            title: { display: true, text: "Adjusted Net Gap", color: "#8fb2df", font: { size: 11, weight: "700" } }
           }
         }
       }
@@ -2170,6 +2850,8 @@ function buildPlannerSummary(cfg) {
 
   let rca = [];
   let actions = [];
+  const selectedResult = getSelectedWeekResult();
+  const auxCount = selectedResult && Array.isArray(selectedResult.auxActivities) ? selectedResult.auxActivities.length : 0;
 
   if (cfg.planningMode === "fixed" && weeklySummary && cfg.availableHC < weeklySummary.peakConcurrent) {
     rca.push("Available HC is below the peak concurrent requirement.");
@@ -2204,6 +2886,7 @@ function buildPlannerSummary(cfg) {
     <div class="summary-item"><strong>Working Days Per Agent:</strong> ${cfg.workingDays}</div>
     <div class="summary-item"><strong>Planning Mode:</strong> ${cfg.planningMode === "fixed" ? "Use My Available HC" : "Calculate HC for Me"}</div>
     <div class="summary-item"><strong>Carry-In Coverage From Prior Week:</strong> ${activeWeekIndex > 1 ? ((multiWeekResults.find(r => r.week === activeWeekIndex) || {}).carryInCount || 0) : 0}</div>
+    <div class="summary-item"><strong>AUX Activities Applied on Selected Week:</strong> ${auxCount}</div>
     <div class="summary-item"><strong>RCA:</strong> ${rca.join(" ")}</div>
     <div class="summary-item"><strong>Action Plan:</strong> ${actions.join(" ")}</div>
   `;
@@ -2232,13 +2915,47 @@ function mergeCoverageAndGap(result) {
     Required: r.Required,
     "Scheduled Count": r["Scheduled Count"],
     "Productive Count": r["Productive Count"],
-    "Over/Under": localGap[i] ? localGap[i]["Over/Under"] : ""
+    "AUX": Number(r.AUX || 0),
+    "Adjusted Productive": Number(r["Adjusted Productive"] != null ? r["Adjusted Productive"] : Number(r["Productive Count"] || 0) - Number(r.AUX || 0)),
+    "Over/Under": localGap[i] ? localGap[i]["Over/Under"] : "",
+    "Adjusted Over/Under": localGap[i] ? (localGap[i]["Adjusted Over/Under"] != null ? localGap[i]["Adjusted Over/Under"] : localGap[i]["Over/Under"]) : ""
   }));
 }
 
 function addWeekColumn(rows, weekNumber) {
   return rows.map(r => ({ Week: `Week ${weekNumber}`, ...r }));
 }
+
+function buildAuxExportRows(result) {
+  const activities = result?.auxActivities || [];
+  const merged = new Map();
+  activities.forEach((a, idx) => {
+    const key = [result.week, a.type || "", a.placementStyle || "", a.day || "", a.start || "", a.end || "", a.targetMode || "", a.warning || ""].join("|");
+    if (!merged.has(key)) {
+      merged.set(key, {
+        Week: `Week ${result.week}`,
+        "Batch ID": a.id || `AUX-${result.week}-${idx + 1}`,
+        "Activity Type": a.type || "",
+        "Placement Style": a.placementStyle === "single" ? "Single Best Slot" : (a.placementStyle === "distributed" ? "Distributed Best Slots" : "Complete Weekly Allocation"),
+        Day: a.day || "",
+        Start: a.start || "",
+        End: a.end || "",
+        Duration: a.duration || "",
+        Agents: Number(a.agents || 0),
+        Intervals: Array.isArray(a.intervals) ? a.intervals.slice() : [],
+        "Target Group": a.targetMode === "all" ? "All Agents" : "Custom Count",
+        Warning: a.warning || ""
+      });
+      return;
+    }
+    const current = merged.get(key);
+    current.Agents = Number((Number(current.Agents || 0) + Number(a.agents || 0)).toFixed(2));
+    const intervalSet = new Set([...(current.Intervals || []), ...((Array.isArray(a.intervals) ? a.intervals : []))]);
+    current.Intervals = Array.from(intervalSet).sort((x, y) => parseTimeToMin(x) - parseTimeToMin(y));
+  });
+  return Array.from(merged.values()).map(row => ({ ...row, Intervals: Array.isArray(row.Intervals) ? row.Intervals.join(" | ") : "" }));
+}
+
 
 function downloadSelectedWeekWeeklyCSV() {
   const result = getSelectedWeekResult();
@@ -2292,6 +3009,34 @@ function downloadAllWeeksCoverageCSV() {
   }
   const rows = multiWeekResults.flatMap(result => addWeekColumn(mergeCoverageAndGap(result), result.week));
   downloadTextFile(rowsToCSV(rows), "coverage_summary_all_weeks.csv", "text/csv");
+}
+
+
+function downloadSelectedWeekAuxCSV() {
+  const result = getSelectedWeekResult();
+  if (!result) {
+    alert("Generate schedules first.");
+    return;
+  }
+  const rows = buildAuxExportRows(result);
+  if (!rows.length) {
+    alert("No AUX schedule found for the selected week. Apply AUX first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(rows), `aux_schedule_week_${result.week}.csv`, "text/csv");
+}
+
+function downloadAllWeeksAuxCSV() {
+  if (!multiWeekResults.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  const rows = multiWeekResults.flatMap(result => buildAuxExportRows(result));
+  if (!rows.length) {
+    alert("No AUX schedule found yet. Apply AUX first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(rows), "aux_schedule_all_weeks.csv", "text/csv");
 }
 
 function downloadWeeklyCSV() { downloadSelectedWeekWeeklyCSV(); }
@@ -2410,7 +3155,8 @@ function runSingleWeekScenario(rows, cfg, weekIndex, forcedHC = null, previousWe
     gapRows: cloneRows(gapRows),
     generatedAgents: cloneRows(generatedAgents),
     netGapTotal: Number(gapTotal.toFixed(2)),
-    carryInCount: carryInAgents.length
+    carryInCount: carryInAgents.length,
+    auxActivities: []
   };
 }
 
@@ -2419,6 +3165,7 @@ function renderWeekResult(weekIndex) {
   if (!result) return;
 
   activeWeekIndex = weekIndex;
+  ensureAuxStructures(result);
   setDemandContext(result.rows);
   weeklySummary = { ...result.summary };
   generatedAgents = cloneRows(result.generatedAgents);
@@ -2434,14 +3181,17 @@ function renderWeekResult(weekIndex) {
 
   renderTableRows("#weeklyRosterTable tbody", weeklyRosterRows.map(r => `<tr><td>${r.Agent}</td><td>${r.Mon}</td><td>${r.Tue}</td><td>${r.Wed}</td><td>${r.Thu}</td><td>${r.Fri}</td><td>${r.Sat}</td><td>${r.Sun}</td></tr>`).join(""));
 
-  renderTableRows("#coverageTable tbody", coverageRows.map(r => `<tr><td>${r.Day}</td><td>${r.Interval}</td><td>${r.Required}</td><td>${r["Scheduled Count"]}</td><td>${r["Productive Count"]}</td></tr>`).join(""));
+  renderTableRows("#coverageTable tbody", coverageRows.map(r => `<tr><td>${r.Day}</td><td>${r.Interval}</td><td>${r.Required}</td><td>${r["Scheduled Count"]}</td><td>${r["Productive Count"]}</td><td>${Number(r.AUX || 0)}</td><td>${Number(r["Adjusted Productive"] != null ? r["Adjusted Productive"] : r["Productive Count"])}</td></tr>`).join(""));
 
-  renderTableRows("#gapTable tbody", gapRows.map(r => `<tr><td>${r.Day}</td><td>${r.Interval}</td><td>${r.Required}</td><td>${r["Productive Coverage"]}</td><td>${r["Over/Under"]}</td></tr>`).join(""));
+  renderTableRows("#gapTable tbody", gapRows.map(r => `<tr><td>${r.Day}</td><td>${r.Interval}</td><td>${r.Required}</td><td>${r["Productive Coverage"]}</td><td>${r["Over/Under"]}</td><td>${Number(r["Adjusted Over/Under"] != null ? r["Adjusted Over/Under"] : r["Over/Under"])}</td></tr>`).join(""));
 
   drawCharts(result.cfg);
   buildPlannerSummary(result.cfg);
   renderWeekTabs();
   document.getElementById("weekPreviewSelect").value = String(weekIndex);
+  refreshAuxWeekOptions();
+  const auxWeek = document.getElementById("auxWeek");
+  if (auxWeek) auxWeek.value = String(weekIndex);
 }
 
 
@@ -2508,6 +3258,7 @@ function generateSchedules() {
 
     renderMultiWeekSummary(cfg);
     renderWeekResult(activeWeekIndex <= horizon ? activeWeekIndex : 1);
+    refreshAuxWeekOptions();
 
     if (generateBtn) {
       generateBtn.disabled = false;
