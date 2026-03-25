@@ -318,6 +318,137 @@
     display:none;
   }
 
+
+  .label-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .help-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    border:1px solid rgba(95,137,204,.34);
+    color:#a8bfdc;
+    font-size:10px;
+    font-weight:800;
+    cursor:pointer;
+    background:rgba(7,17,34,.92);
+    flex:0 0 auto;
+    position:relative;
+    user-select:none;
+  }
+
+  .help-icon.active,
+  .help-icon:hover{
+    color:#ffffff;
+    border-color:rgba(21,230,255,.62);
+    box-shadow:0 0 0 1px rgba(21,230,255,.16), 0 0 12px rgba(21,230,255,.12);
+  }
+
+  .field-help-note{
+    margin-top:6px;
+    font-size:11px;
+    line-height:1.45;
+    color:#8fb2df;
+  }
+
+  .help-tooltip{
+    position:fixed;
+    z-index:9999;
+    max-width:280px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(72,177,255,.42);
+    background:rgba(5,14,28,.98);
+    color:#eaf4ff;
+    box-shadow:var(--shadow), var(--glow);
+    font-size:12px;
+    line-height:1.5;
+    display:none;
+    pointer-events:none;
+  }
+
+  .week-upload-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(180px, 1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+
+  .mini-card{
+    background:rgba(10,24,47,.72);
+    border:1px solid rgba(95,137,204,.24);
+    padding:12px;
+    border-radius:12px;
+  }
+
+  .mini-card h3{
+    font-size:14px;
+    margin:0 0 10px;
+  }
+
+  .status-pill{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid rgba(95,137,204,.24);
+    background:rgba(7,17,34,.92);
+    color:#cfe2ff;
+    font-size:11px;
+    margin-top:8px;
+  }
+
+  .tab-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:0 0 14px;
+  }
+
+  .tab-btn{
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid rgba(95,137,204,.34);
+    background:rgba(7,17,34,.92);
+    color:#dceaff;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .tab-btn.active{
+    background:linear-gradient(180deg, rgba(25,244,255,.95), rgba(9,201,226,.92));
+    color:#03101c;
+    border-color:rgba(21,230,255,.82);
+  }
+
+  .week-summary-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(180px, 1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+
+  .small-note{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:8px;
+    line-height:1.5;
+  }
+
+  .inline-note{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+
   @media(max-width:1350px){
     .kpi-grid{
       grid-template-columns:repeat(3, minmax(160px, 1fr));
@@ -387,7 +518,7 @@
 
   <div class="field-grid">
     <div class="field">
-      <label for="planningMode">Planning Mode</label>
+      <label for="planningMode"><span class="label-row">Planning Mode <span class="help-icon" title="Choose whether the tool should calculate suggested HC from requirement or use the HC you already have.">i</span></span></label>
       <select id="planningMode">
         <option value="calculate" selected>Calculate HC for Me</option>
         <option value="fixed">Use My Available HC</option>
@@ -395,12 +526,12 @@
     </div>
 
     <div class="field hidden" id="availableHcWrapper">
-      <label for="availableHC">Available HC</label>
+      <label for="availableHC"><span class="label-row">Available HC <span class="help-icon" title="Enter the HC pool you already have available when using fixed planning mode.">i</span></span></label>
       <input id="availableHC" type="number" min="1" placeholder="75" value="75">
     </div>
 
     <div class="field">
-      <label for="intervalSize">Interval Size</label>
+      <label for="intervalSize"><span class="label-row">Interval Size <span class="help-icon" title="This must match the granularity used in the uploaded requirement file, such as 30 or 60 minutes.">i</span></span></label>
       <select id="intervalSize">
         <option value="30" selected>30 minutes</option>
         <option value="60">60 minutes</option>
@@ -408,7 +539,7 @@
     </div>
 
     <div class="field">
-      <label for="operatingHours">Operating Hours Per Day</label>
+      <label for="operatingHours"><span class="label-row">Operating Hours Per Day <span class="help-icon" title="Defines how many business hours the roster must cover each day from the HOOP start time.">i</span></span></label>
       <select id="operatingHours">
         <option value="9">9</option>
         <option value="10">10</option>
@@ -425,7 +556,7 @@
     </div>
 
     <div class="field">
-      <label for="operatingDays">Operating Days Per Week</label>
+      <label for="operatingDays"><span class="label-row">Operating Days Per Week <span class="help-icon" title="Controls which days are treated as open days. 5 means Mon-Fri, 6 means Mon-Sat, 7 means Mon-Sun.">i</span></span></label>
       <select id="operatingDays">
         <option value="5">5</option>
         <option value="6">6</option>
@@ -434,7 +565,7 @@
     </div>
 
     <div class="field">
-      <label for="workingDays">Working Days Per Week</label>
+      <label for="workingDays"><span class="label-row">Working Days Per Week <span class="help-icon" title="How many days each agent should work within an open week. Off days are assigned from the remaining open days.">i</span></span></label>
       <select id="workingDays">
         <option value="5" selected>5</option>
         <option value="6">6</option>
@@ -443,7 +574,7 @@
     </div>
 
     <div class="field">
-      <label for="weekOffPattern">Week Off Pattern</label>
+      <label for="weekOffPattern"><span class="label-row">Week Off Pattern <span class="help-icon" title="Best Fit spreads off days based on lighter demand. Continuous keeps off days together. Split separates them.">i</span></span></label>
       <select id="weekOffPattern">
         <option value="best" selected>Best Fit</option>
         <option value="continuous">Continuous</option>
@@ -452,7 +583,7 @@
     </div>
 
     <div class="field">
-      <label for="startInterval">Start Interval</label>
+      <label for="startInterval"><span class="label-row">Start Interval <span class="help-icon" title="Defines the spacing between candidate shift start times used by the generator.">i</span></span></label>
       <select id="startInterval">
         <option value="30" selected>30 minutes</option>
         <option value="60">60 minutes</option>
@@ -460,7 +591,7 @@
     </div>
 
     <div class="field">
-      <label for="peakProtection">Peak Protection Level</label>
+      <label for="peakProtection"><span class="label-row">Peak Protection Level <span class="help-icon" title="Controls how strongly the generator prioritizes peak intervals when assigning shifts.">i</span></span></label>
       <select id="peakProtection">
         <option value="strict">Strict</option>
         <option value="moderate" selected>Moderate</option>
@@ -469,7 +600,7 @@
     </div>
 
     <div class="field">
-      <label for="shoulderProtection">Shoulder Protection Level</label>
+      <label for="shoulderProtection"><span class="label-row">Shoulder Protection Level <span class="help-icon" title="Controls how much extra coverage is allowed around shoulder intervals outside the main peak.">i</span></span></label>
       <select id="shoulderProtection">
         <option value="strict">Strict</option>
         <option value="moderate" selected>Moderate</option>
@@ -478,29 +609,63 @@
     </div>
 
     <div class="field">
-      <label for="hoopStart">HOOP Start Time</label>
+      <label for="hoopStart"><span class="label-row">HOOP Start Time <span class="help-icon" title="Start of hours of operation. HOOP end is auto-calculated from this plus operating hours.">i</span></span></label>
       <input id="hoopStart" type="time" value="08:00">
     </div>
 
     <div class="field">
-      <label for="earliestStart">Earliest Shift Start</label>
+      <label for="earliestStart"><span class="label-row">Earliest Shift Start <span class="help-icon" title="No generated shift will begin earlier than this time.">i</span></span></label>
       <input id="earliestStart" type="time" value="08:00">
     </div>
 
     <div class="field">
-      <label for="latestEnd">Latest Shift End</label>
+      <label for="latestEnd"><span class="label-row">Latest Shift End <span class="help-icon" title="No generated shift will end later than this time. Cross-midnight is supported when latest end is earlier than earliest start.">i</span></span></label>
       <input id="latestEnd" type="time" value="20:00">
     </div>
 
     <div class="field">
-      <label for="mealOffset">Meal Window Offset from Start (hours)</label>
+      <label for="mealOffset"><span class="label-row">Meal Window Offset from Start (hours) <span class="help-icon" title="Target meal timing from the shift start. The engine still keeps lunch inside a safe window.">i</span></span></label>
       <input id="mealOffset" type="number" step="0.5" value="4" placeholder="4">
     </div>
 
     <div class="field">
-      <label for="staggerGap">Break / Meal Stagger Gap (minutes)</label>
+      <label for="staggerGap"><span class="label-row">Break / Meal Stagger Gap (minutes) <span class="help-icon" title="Planning note only for now. Used to communicate desired staggering space between offline blocks.">i</span></span></label>
       <input id="staggerGap" type="number" value="30" placeholder="30">
     </div>
+
+    <div class="field">
+      <label for="planningHorizon"><span class="label-row">Planning Horizon <span class="help-icon" title="Choose how many weeks you want to plan in one run. Core calculation still runs week by week to protect existing logic.">i</span></span></label>
+      <select id="planningHorizon">
+        <option value="1" selected>1 Week</option>
+        <option value="2">2 Weeks</option>
+        <option value="3">3 Weeks</option>
+        <option value="4">4 Weeks</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="requirementPattern"><span class="label-row">Requirement Pattern <span class="help-icon" title="Use Same for All Weeks when every week uses the same requirement file. Use Different by Week when each week has its own requirement.">i</span></span></label>
+      <select id="requirementPattern">
+        <option value="same" selected>Same for All Weeks</option>
+        <option value="different">Different by Week</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="hcStrategy"><span class="label-row">HC Strategy <span class="help-icon" title="Fixed HC keeps one HC pool across all weeks. Weekly Recalculation recalculates suggested HC separately for each week.">i</span></span></label>
+      <select id="hcStrategy">
+        <option value="fixedPool" selected>Fixed HC for Entire Horizon</option>
+        <option value="weeklyRecalc">Recalculate HC by Week</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="weekPreviewSelect"><span class="label-row">Week Preview <span class="help-icon" title="Choose which week to preview in the requirement table and outputs after generation.">i</span></span></label>
+      <select id="weekPreviewSelect">
+        <option value="1" selected>Week 1</option>
+      </select>
+    </div>
+
   </div>
 
   <div class="fixed-box">
@@ -524,23 +689,57 @@
   </div>
 </div>
 
+
 <div class="section">
   <h2>Upload Requirement File</h2>
 
   <div class="button-row">
     <button type="button" onclick="downloadSampleTemplate()">Download Sample Template</button>
-    <button type="button" onclick="document.getElementById('fileInput').click()">Upload File</button>
+    <button type="button" onclick="triggerRequirementUpload()">Upload File</button>
     <button type="button" onclick="generateSchedules()">Generate Schedules</button>
   </div>
 
   <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+  <input type="file" id="weekFileInput1" accept=".csv,.xlsx,.xls" style="display:none;">
+  <input type="file" id="weekFileInput2" accept=".csv,.xlsx,.xls" style="display:none;">
+  <input type="file" id="weekFileInput3" accept=".csv,.xlsx,.xls" style="display:none;">
+  <input type="file" id="weekFileInput4" accept=".csv,.xlsx,.xls" style="display:none;">
 
   <div id="dropZone">Drag & Drop Excel or CSV File Here</div>
   <div class="result-box" id="uploadStatus">No file uploaded yet.</div>
+
+  <div id="multiWeekUploadArea" class="hidden">
+    <div class="week-upload-grid">
+      <div class="mini-card">
+        <h3>Week 1</h3>
+        <button type="button" onclick="document.getElementById('weekFileInput1').click()">Upload Week 1</button>
+        <div class="status-pill" id="weekStatus1">Not uploaded</div>
+      </div>
+      <div class="mini-card">
+        <h3>Week 2</h3>
+        <button type="button" onclick="document.getElementById('weekFileInput2').click()">Upload Week 2</button>
+        <div class="status-pill" id="weekStatus2">Not uploaded</div>
+      </div>
+      <div class="mini-card">
+        <h3>Week 3</h3>
+        <button type="button" onclick="document.getElementById('weekFileInput3').click()">Upload Week 3</button>
+        <div class="status-pill" id="weekStatus3">Not uploaded</div>
+      </div>
+      <div class="mini-card">
+        <h3>Week 4</h3>
+        <button type="button" onclick="document.getElementById('weekFileInput4').click()">Upload Week 4</button>
+        <div class="status-pill" id="weekStatus4">Not uploaded</div>
+      </div>
+    </div>
+    <div class="small-note">In Different by Week mode, upload one requirement file per week. Each week still uses the same current calculation engine.</div>
+  </div>
 </div>
+
 
 <div class="section">
   <h2>Uploaded Weekly Requirement</h2>
+  <div id="weekTabRow" class="tab-row"></div>
+  <div class="inline-note">The tables and charts below will show the selected week.</div>
   <div class="table-scroll">
     <table id="requirementTable">
       <thead>
@@ -557,6 +756,33 @@
       </thead>
       <tbody></tbody>
     </table>
+  </div>
+</div>
+
+
+<div class="section">
+  <h2>Multi-Week Planning Summary</h2>
+  <div id="multiWeekSummary" class="week-summary-grid">
+    <div class="kpi-card">
+      <div class="kpi-title">Planning Horizon</div>
+      <div class="kpi-value" id="mwWeeks">1</div>
+      <div class="kpi-note">Number of weeks included in the current scenario.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">HC Strategy</div>
+      <div class="kpi-value" id="mwHcStrategy" style="font-size:16px;">Fixed Pool</div>
+      <div class="kpi-note">How headcount is handled across all selected weeks.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Highest Suggested HC</div>
+      <div class="kpi-value" id="mwHighestHC">0</div>
+      <div class="kpi-note">Highest suggested or applied HC across all loaded weeks.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Toughest Week</div>
+      <div class="kpi-value" id="mwToughestWeek" style="font-size:16px;">Week 1</div>
+      <div class="kpi-note">Week with the lowest net over / under total after generation.</div>
+    </div>
   </div>
 </div>
 
@@ -688,6 +914,7 @@
     <div class="chart-box"><canvas id="dailyTotalsChart"></canvas></div>
     <div class="chart-box"><canvas id="gapChart"></canvas></div>
     <div class="chart-box"><canvas id="startDistChart"></canvas></div>
+    <div class="chart-box"><canvas id="weeklyViewChart"></canvas></div>
   </div>
 </div>
 
@@ -699,11 +926,18 @@
 <div class="section">
   <h2>Export Outputs</h2>
   <div class="button-row">
-    <button type="button" onclick="downloadWeeklyCSV()">Download Weekly Schedule</button>
-    <button type="button" onclick="downloadDailyCSV()">Download Daily Schedule</button>
-    <button type="button" onclick="downloadCoverageCSV()">Download Coverage Summary</button>
+    <button type="button" onclick="downloadSelectedWeekWeeklyCSV()">Download Selected Week Weekly Schedule</button>
+    <button type="button" onclick="downloadSelectedWeekDailyCSV()">Download Selected Week Daily Schedule</button>
+    <button type="button" onclick="downloadSelectedWeekCoverageCSV()">Download Selected Week Coverage Summary</button>
+  </div>
+  <div class="button-row" style="margin-top:10px;">
+    <button type="button" onclick="downloadAllWeeksWeeklyCSV()">Download All Weeks Weekly Schedule</button>
+    <button type="button" onclick="downloadAllWeeksDailyCSV()">Download All Weeks Daily Schedule</button>
+    <button type="button" onclick="downloadAllWeeksCoverageCSV()">Download All Weeks Coverage Summary</button>
   </div>
 </div>
+
+<div id="helpTooltip" class="help-tooltip"></div>
 
 <script>
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -722,10 +956,14 @@ let weeklyRosterRows = [];
 let coverageRows = [];
 let gapRows = [];
 let weeklySummary = null;
+let weeklyRequirementSets = { 1: [] };
+let multiWeekResults = [];
+let activeWeekIndex = 1;
 
 let dailyTotalsChart = null;
 let gapChart = null;
 let startDistChart = null;
+let weeklyViewChart = null;
 
 function parseTimeToMin(str) {
   if (!str || !String(str).includes(":")) return 0;
@@ -797,6 +1035,163 @@ function updateDerivedDisplays() {
   togglePlanningMode();
 }
 
+
+function getPlanningHorizon() {
+  return Number(document.getElementById("planningHorizon").value || 1);
+}
+
+function getRequirementPattern() {
+  return document.getElementById("requirementPattern").value;
+}
+
+function updateWeekControls() {
+  const horizon = getPlanningHorizon();
+  const pattern = getRequirementPattern();
+  const preview = document.getElementById("weekPreviewSelect");
+  const area = document.getElementById("multiWeekUploadArea");
+  preview.innerHTML = "";
+
+  for (let i = 1; i <= horizon; i++) {
+    preview.innerHTML += `<option value="${i}">Week ${i}</option>`;
+  }
+
+  if (activeWeekIndex > horizon) activeWeekIndex = 1;
+  preview.value = String(activeWeekIndex);
+
+  area.classList.toggle("hidden", !(pattern === "different" && horizon > 1));
+
+  for (let i = 1; i <= 4; i++) {
+    const card = document.getElementById(`weekStatus${i}`);
+    if (card) {
+      const fileLoaded = Array.isArray(weeklyRequirementSets[i]) && weeklyRequirementSets[i].length > 0;
+      const inRange = i <= horizon;
+      card.parentElement.classList.toggle("hidden", !inRange);
+      card.innerText = fileLoaded ? `${weeklyRequirementSets[i].length} intervals loaded` : "Not uploaded";
+    }
+  }
+
+  if (pattern === "same") {
+    document.getElementById("dropZone").innerText = "Drag & Drop Excel or CSV File Here";
+  } else {
+    document.getElementById("dropZone").innerText = "Drag & Drop a week file here. The selected preview week will receive the file.";
+  }
+
+  renderWeekTabs();
+  renderRequirementPreview();
+}
+
+function triggerRequirementUpload() {
+  const pattern = getRequirementPattern();
+  const horizon = getPlanningHorizon();
+  if (pattern === "same" || horizon === 1) {
+    document.getElementById("fileInput").click();
+    return;
+  }
+  const targetInput = document.getElementById(`weekFileInput${activeWeekIndex}`);
+  if (targetInput) targetInput.click();
+}
+
+function setDemandContext(rows) {
+  weeklyMatrixRows = Array.isArray(rows) ? rows.map(r => ({ ...r })) : [];
+  intervalList = weeklyMatrixRows.map(r => r.Interval);
+  dayDemandMap = {};
+  DAYS.forEach(day => {
+    dayDemandMap[day] = weeklyMatrixRows.map(r => Number(r[day] || 0));
+  });
+}
+
+function cloneRows(rows) {
+  return rows.map(r => ({ ...r }));
+}
+
+function buildCoverageGapMap(rows) {
+  const map = new Map();
+  rows.forEach(r => {
+    map.set(`${r.Day}|${r.Interval}`, Number(r["Over/Under"] || 0));
+  });
+  return map;
+}
+
+function renderTableRows(selector, html) {
+  const tbody = document.querySelector(selector);
+  if (tbody) tbody.innerHTML = html;
+}
+
+function getWeekRowsForRun(weekIndex) {
+  const pattern = getRequirementPattern();
+  const baseRows = weeklyRequirementSets[1] || [];
+  if (pattern === "same" || getPlanningHorizon() === 1) {
+    return cloneRows(baseRows);
+  }
+  return cloneRows(weeklyRequirementSets[weekIndex] || []);
+}
+
+function renderWeekTabs() {
+  const tabRow = document.getElementById("weekTabRow");
+  const horizon = getPlanningHorizon();
+  tabRow.innerHTML = "";
+  for (let i = 1; i <= horizon; i++) {
+    const loaded = (getRequirementPattern() === "same" || i === 1)
+      ? (weeklyRequirementSets[1] || []).length
+      : (weeklyRequirementSets[i] || []).length;
+    tabRow.innerHTML += `<button type="button" class="tab-btn ${i === activeWeekIndex ? "active" : ""}" onclick="selectWeek(${i})">Week ${i}${loaded ? "" : " *"}</button>`;
+  }
+}
+
+function selectWeek(weekIndex) {
+  activeWeekIndex = weekIndex;
+  document.getElementById("weekPreviewSelect").value = String(weekIndex);
+  renderWeekTabs();
+  renderRequirementPreview();
+  if (multiWeekResults.length) {
+    renderWeekResult(weekIndex);
+  }
+}
+
+function renderRequirementPreview() {
+  const rows = getWeekRowsForRun(activeWeekIndex);
+  setDemandContext(rows);
+  populateRequirementTable();
+}
+
+function parseRowsFromUploadedData(rows) {
+  const parsed = rows
+    .map(normalizeWideRow)
+    .filter(r => r.Interval && DAYS.every(d => !Number.isNaN(r[d])));
+  parsed.sort((a, b) => parseTimeToMin(a.Interval) - parseTimeToMin(b.Interval));
+  return parsed;
+}
+
+function updateUploadStatusText() {
+  const horizon = getPlanningHorizon();
+  const pattern = getRequirementPattern();
+
+  if (pattern === "same" || horizon === 1) {
+    const count = (weeklyRequirementSets[1] || []).length;
+    document.getElementById("uploadStatus").innerText = count
+      ? `Base requirement loaded successfully. ${count} intervals available for ${horizon} week(s).`
+      : "No file uploaded yet.";
+    return;
+  }
+
+  const loadedWeeks = [];
+  for (let i = 1; i <= horizon; i++) {
+    if ((weeklyRequirementSets[i] || []).length) loadedWeeks.push(`Week ${i}`);
+  }
+  document.getElementById("uploadStatus").innerText = loadedWeeks.length
+    ? `Loaded requirement files for: ${loadedWeeks.join(", ")}.`
+    : "No weekly files uploaded yet.";
+}
+
+function storeParsedRows(parsed, weekIndex) {
+  weeklyRequirementSets[weekIndex] = parsed;
+  setDemandContext(getWeekRowsForRun(activeWeekIndex));
+  updateUploadStatusText();
+  updateWeekControls();
+  renderRequirementPreview();
+}
+
+
 function togglePlanningMode() {
   const mode = document.getElementById("planningMode").value;
   const wrapper = document.getElementById("availableHcWrapper");
@@ -817,7 +1212,75 @@ function togglePlanningMode() {
 ["operatingDays", "workingDays", "hoopStart", "operatingHours", "planningMode"].forEach(id => {
   document.getElementById(id).addEventListener("change", updateDerivedDisplays);
 });
+["planningHorizon", "requirementPattern"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => {
+    updateWeekControls();
+    updateUploadStatusText();
+  });
+});
+function initHelpTooltips() {
+  const tooltip = document.getElementById("helpTooltip");
+  if (!tooltip) return;
+
+  function positionTooltip(target) {
+    const rect = target.getBoundingClientRect();
+    const top = rect.bottom + 10;
+    const left = Math.min(window.innerWidth - 300, Math.max(12, rect.left - 10));
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+  }
+
+  function showTooltip(target) {
+    const text = target.getAttribute("title") || target.dataset.help || "";
+    if (!text) return;
+    target.dataset.help = text;
+    target.removeAttribute("title");
+    document.querySelectorAll(".help-icon.active").forEach(el => el.classList.remove("active"));
+    target.classList.add("active");
+    tooltip.textContent = text;
+    tooltip.style.display = "block";
+    positionTooltip(target);
+  }
+
+  function hideTooltip() {
+    tooltip.style.display = "none";
+    document.querySelectorAll(".help-icon.active").forEach(el => el.classList.remove("active"));
+  }
+
+  document.querySelectorAll(".help-icon").forEach(icon => {
+    const text = icon.getAttribute("title") || "";
+    if (text) {
+      icon.dataset.help = text;
+      icon.removeAttribute("title");
+    }
+    icon.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (tooltip.style.display === "block" && this.classList.contains("active")) hideTooltip();
+      else showTooltip(this);
+    });
+  });
+
+  window.addEventListener("scroll", () => {
+    const active = document.querySelector(".help-icon.active");
+    if (active && tooltip.style.display === "block") positionTooltip(active);
+  }, { passive:true });
+  window.addEventListener("resize", () => {
+    const active = document.querySelector(".help-icon.active");
+    if (active && tooltip.style.display === "block") positionTooltip(active);
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".help-icon") && !e.target.closest("#helpTooltip")) hideTooltip();
+  });
+}
+
+document.getElementById("weekPreviewSelect").addEventListener("change", function() {
+  selectWeek(Number(this.value || 1));
+});
 updateDerivedDisplays();
+updateWeekControls();
+updateUploadStatusText();
+initHelpTooltips();
 
 function downloadTextFile(content, fileName, mimeType) {
   const blob = new Blob([content], { type: mimeType });
@@ -863,6 +1326,9 @@ function buildConfig() {
   const selectedWorkingDays = Number(document.getElementById("workingDays").value);
   return {
     planningMode: document.getElementById("planningMode").value,
+    planningHorizon: Number(document.getElementById("planningHorizon").value || 1),
+    requirementPattern: document.getElementById("requirementPattern").value,
+    hcStrategy: document.getElementById("hcStrategy").value,
     availableHC: Number(document.getElementById("availableHC").value || 0),
     intervalSize: Number(document.getElementById("intervalSize").value),
     operatingHours: Number(document.getElementById("operatingHours").value),
@@ -913,35 +1379,14 @@ function normalizeWideRow(r) {
   };
 }
 
-function parseUploadedRows(rows) {
-  const parsed = rows
-    .map(normalizeWideRow)
-    .filter(r => r.Interval && DAYS.every(d => !Number.isNaN(r[d])));
-
-  parsed.sort((a, b) => parseTimeToMin(a.Interval) - parseTimeToMin(b.Interval));
-
-  weeklyMatrixRows = parsed;
-  intervalList = weeklyMatrixRows.map(r => r.Interval);
-  dayDemandMap = {};
-
-  DAYS.forEach(day => {
-    dayDemandMap[day] = weeklyMatrixRows.map(r => r[day]);
-  });
-
-  populateRequirementTable();
-
-  document.getElementById("uploadStatus").innerText =
-    weeklyMatrixRows.length
-      ? `File uploaded successfully. ${weeklyMatrixRows.length} intervals loaded across 7 days.`
-      : "No valid rows found. Please check the file format.";
+function parseUploadedRows(rows, weekIndex = 1) {
+  const parsed = parseRowsFromUploadedData(rows);
+  storeParsedRows(parsed, weekIndex);
 }
 
 function populateRequirementTable() {
   const tbody = document.querySelector("#requirementTable tbody");
-  tbody.innerHTML = "";
-
-  weeklyMatrixRows.forEach(r => {
-    tbody.innerHTML += `
+  tbody.innerHTML = weeklyMatrixRows.map(r => `
       <tr>
         <td>${r.Interval}</td>
         <td>${r.Mon}</td>
@@ -952,11 +1397,10 @@ function populateRequirementTable() {
         <td>${r.Sat}</td>
         <td>${r.Sun}</td>
       </tr>
-    `;
-  });
+    `).join("");
 }
 
-function handleFile(file) {
+function handleFile(file, weekIndex = 1) {
   if (!file) return;
   const name = file.name.toLowerCase();
 
@@ -965,7 +1409,7 @@ function handleFile(file) {
       header: true,
       skipEmptyLines: true,
       complete: function(res) {
-        parseUploadedRows(res.data);
+        parseUploadedRows(res.data, weekIndex);
       }
     });
   } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
@@ -975,7 +1419,7 @@ function handleFile(file) {
       const workbook = XLSX.read(data, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet);
-      parseUploadedRows(json);
+      parseUploadedRows(json, weekIndex);
     };
     reader.readAsArrayBuffer(file);
   } else {
@@ -984,7 +1428,16 @@ function handleFile(file) {
 }
 
 document.getElementById("fileInput").addEventListener("change", function(e) {
-  handleFile(e.target.files[0]);
+  handleFile(e.target.files[0], 1);
+});
+
+[1,2,3,4].forEach(weekNo => {
+  const input = document.getElementById(`weekFileInput${weekNo}`);
+  if (input) {
+    input.addEventListener("change", function(e) {
+      handleFile(e.target.files[0], weekNo);
+    });
+  }
 });
 
 const dropZone = document.getElementById("dropZone");
@@ -1001,7 +1454,8 @@ dropZone.addEventListener("dragleave", function() {
 dropZone.addEventListener("drop", function(e) {
   e.preventDefault();
   dropZone.classList.remove("dragover");
-  handleFile(e.dataTransfer.files[0]);
+  const dropWeek = (getRequirementPattern() === "different" && getPlanningHorizon() > 1) ? activeWeekIndex : 1;
+  handleFile(e.dataTransfer.files[0], dropWeek);
 });
 
 function getWeeklyTotals(cfg) {
@@ -1423,7 +1877,7 @@ function buildDailyAndWeeklyOutputs(cfg) {
   });
 }
 
-function buildCoverageOutputs(cfg) {
+function buildCoverageOutputs(cfg, carryInAgents = []) {
   const covTbody = document.querySelector("#coverageTable tbody");
   const gapTbody = document.querySelector("#gapTable tbody");
   covTbody.innerHTML = "";
@@ -1439,6 +1893,34 @@ function buildCoverageOutputs(cfg) {
 
     const scheduledByInterval = Array(intervalList.length).fill(0);
     const productiveByInterval = Array(intervalList.length).fill(0);
+
+    if (dayIndex === 0 && Array.isArray(carryInAgents) && carryInAgents.length) {
+      carryInAgents.forEach((a, agentIndex) => {
+        const prevWeekSundayStartAbs = (-1440) + a.startClockMin;
+        const prevWeekSundayEndAbs = prevWeekSundayStartAbs + SHIFT_MIN;
+        if (prevWeekSundayEndAbs <= 0) return;
+
+        const pPrevWeek = buildDayPattern(prevWeekSundayStartAbs, agentIndex, -1, cfg);
+
+        for (let i = 0; i < intervalList.length; i++) {
+          const intervalStartAbs = getIntervalAbs(dayIndex, intervalStarts[i]);
+          const scheduledOverlap = overlapAbsoluteDuration(prevWeekSundayStartAbs, SHIFT_MIN, intervalStartAbs, cfg.intervalSize);
+          const isScheduled = scheduledOverlap > 0 ? 1 : 0;
+
+          if (isScheduled > 0) {
+            const lunchLoss = overlapAbsoluteDuration(pPrevWeek.lunchStart, LUNCH_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+            const break1Loss = overlapAbsoluteDuration(pPrevWeek.break1Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+            const break2Loss = overlapAbsoluteDuration(pPrevWeek.break2Start, BREAK_MIN, intervalStartAbs, cfg.intervalSize) / cfg.intervalSize;
+
+            let productivePart = isScheduled - lunchLoss - break1Loss - break2Loss;
+            productivePart = Math.max(0, Math.min(1, productivePart));
+
+            scheduledByInterval[i] += 1;
+            productiveByInterval[i] += productivePart;
+          }
+        }
+      });
+    }
 
     generatedAgents.forEach((a, agentIndex) => {
       if (a.workMask[dayIndex]) {
@@ -1565,6 +2047,7 @@ function drawCharts(cfg) {
   safeDestroy(dailyTotalsChart);
   safeDestroy(gapChart);
   safeDestroy(startDistChart);
+  safeDestroy(weeklyViewChart);
 
   const openDays = DAYS.filter((_, idx) => isDayOpen(idx, cfg));
   const dayTotalsRequired = openDays.map(day => (dayDemandMap[day] || []).reduce((s, v) => s + v, 0));
@@ -1614,6 +2097,55 @@ function drawCharts(cfg) {
     },
     options: chartOptions("Headcount")
   });
+
+  const weeklyCanvas = document.getElementById("weeklyViewChart");
+  if (weeklyCanvas) {
+    const weekLabels = multiWeekResults.length
+      ? multiWeekResults.map(r => `Week ${r.week}`)
+      : [`Week ${activeWeekIndex || 1}`];
+    const weekRequired = multiWeekResults.length
+      ? multiWeekResults.map(r => (r.coverageRows || []).reduce((s, row) => s + Number(row.Required || 0), 0))
+      : [coverageRows.reduce((s, row) => s + Number(row.Required || 0), 0)];
+    const weekProductive = multiWeekResults.length
+      ? multiWeekResults.map(r => (r.coverageRows || []).reduce((s, row) => s + Number(row["Productive Count"] || 0), 0))
+      : [coverageRows.reduce((s, row) => s + Number(row["Productive Count"] || 0), 0)];
+    const weekGap = multiWeekResults.length
+      ? multiWeekResults.map(r => Number(r.netGapTotal || 0))
+      : [gapRows.reduce((s, row) => s + Number(row["Over/Under"] || 0), 0)];
+    const selectedWeekGap = weekGap.map((value, idx) => (idx + 1 === activeWeekIndex ? value : null));
+    const selectedWeekRequired = weekRequired.map((value, idx) => (idx + 1 === activeWeekIndex ? value : null));
+
+    weeklyViewChart = new Chart(weeklyCanvas, {
+      data: {
+        labels: weekLabels,
+        datasets: [
+          { type: "bar", label: "Weekly Required", data: weekRequired },
+          { type: "bar", label: "Weekly Productive Coverage", data: weekProductive },
+          { type: "line", label: "Weekly Net Gap", data: weekGap, yAxisID: "y1", tension: 0.25 },
+          { type: "line", label: `Selected Week ${activeWeekIndex} Gap`, data: selectedWeekGap, yAxisID: "y1", tension: 0, spanGaps: false },
+          { type: "line", label: `Selected Week ${activeWeekIndex} Required`, data: selectedWeekRequired, tension: 0, spanGaps: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { position: "top" },
+          title: { display: true, text: `Weekly Comparison View • Active Selection: Week ${activeWeekIndex}` }
+        },
+        scales: {
+          x: { title: { display: true, text: "Weeks" } },
+          y: { beginAtZero: true, title: { display: true, text: "Coverage" } },
+          y1: {
+            beginAtZero: false,
+            position: "right",
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: "Net Gap" }
+          }
+        }
+      }
+    });
+  }
 }
 
 function buildPlannerSummary(cfg) {
@@ -1671,6 +2203,7 @@ function buildPlannerSummary(cfg) {
     <div class="summary-item"><strong>Operating Days:</strong> ${cfg.operatingDays}</div>
     <div class="summary-item"><strong>Working Days Per Agent:</strong> ${cfg.workingDays}</div>
     <div class="summary-item"><strong>Planning Mode:</strong> ${cfg.planningMode === "fixed" ? "Use My Available HC" : "Calculate HC for Me"}</div>
+    <div class="summary-item"><strong>Carry-In Coverage From Prior Week:</strong> ${activeWeekIndex > 1 ? ((multiWeekResults.find(r => r.week === activeWeekIndex) || {}).carryInCount || 0) : 0}</div>
     <div class="summary-item"><strong>RCA:</strong> ${rca.join(" ")}</div>
     <div class="summary-item"><strong>Action Plan:</strong> ${actions.join(" ")}</div>
   `;
@@ -1686,129 +2219,301 @@ function rowsToCSV(rows) {
   return lines.join("\n");
 }
 
-function downloadWeeklyCSV() {
-  if (!weeklyRosterRows.length) {
-    alert("Generate schedules first.");
-    return;
-  }
-  downloadTextFile(rowsToCSV(weeklyRosterRows), "weekly_schedule.csv", "text/csv");
+function getSelectedWeekResult() {
+  return multiWeekResults.find(r => r.week === activeWeekIndex) || null;
 }
 
-function downloadDailyCSV() {
-  if (!dailyDetailedRows.length) {
-    alert("Generate schedules first.");
-    return;
-  }
-  downloadTextFile(rowsToCSV(dailyDetailedRows), "daily_detailed_schedule.csv", "text/csv");
-}
-
-function downloadCoverageCSV() {
-  if (!coverageRows.length) {
-    alert("Generate schedules first.");
-    return;
-  }
-  const merged = coverageRows.map((r, i) => ({
+function mergeCoverageAndGap(result) {
+  const localCoverage = result?.coverageRows || [];
+  const localGap = result?.gapRows || [];
+  return localCoverage.map((r, i) => ({
     Day: r.Day,
     Interval: r.Interval,
     Required: r.Required,
     "Scheduled Count": r["Scheduled Count"],
     "Productive Count": r["Productive Count"],
-    "Over/Under": gapRows[i]["Over/Under"]
+    "Over/Under": localGap[i] ? localGap[i]["Over/Under"] : ""
   }));
-  downloadTextFile(rowsToCSV(merged), "coverage_summary.csv", "text/csv");
 }
 
+function addWeekColumn(rows, weekNumber) {
+  return rows.map(r => ({ Week: `Week ${weekNumber}`, ...r }));
+}
+
+function downloadSelectedWeekWeeklyCSV() {
+  const result = getSelectedWeekResult();
+  if (!result || !(result.weeklyRosterRows || []).length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(addWeekColumn(result.weeklyRosterRows, result.week)), `weekly_schedule_week_${result.week}.csv`, "text/csv");
+}
+
+function downloadSelectedWeekDailyCSV() {
+  const result = getSelectedWeekResult();
+  if (!result || !(result.dailyDetailedRows || []).length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(addWeekColumn(result.dailyDetailedRows, result.week)), `daily_detailed_schedule_week_${result.week}.csv`, "text/csv");
+}
+
+function downloadSelectedWeekCoverageCSV() {
+  const result = getSelectedWeekResult();
+  if (!result || !(result.coverageRows || []).length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  downloadTextFile(rowsToCSV(addWeekColumn(mergeCoverageAndGap(result), result.week)), `coverage_summary_week_${result.week}.csv`, "text/csv");
+}
+
+function downloadAllWeeksWeeklyCSV() {
+  if (!multiWeekResults.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  const rows = multiWeekResults.flatMap(result => addWeekColumn(result.weeklyRosterRows || [], result.week));
+  downloadTextFile(rowsToCSV(rows), "weekly_schedule_all_weeks.csv", "text/csv");
+}
+
+function downloadAllWeeksDailyCSV() {
+  if (!multiWeekResults.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  const rows = multiWeekResults.flatMap(result => addWeekColumn(result.dailyDetailedRows || [], result.week));
+  downloadTextFile(rowsToCSV(rows), "daily_detailed_schedule_all_weeks.csv", "text/csv");
+}
+
+function downloadAllWeeksCoverageCSV() {
+  if (!multiWeekResults.length) {
+    alert("Generate schedules first.");
+    return;
+  }
+  const rows = multiWeekResults.flatMap(result => addWeekColumn(mergeCoverageAndGap(result), result.week));
+  downloadTextFile(rowsToCSV(rows), "coverage_summary_all_weeks.csv", "text/csv");
+}
+
+function downloadWeeklyCSV() { downloadSelectedWeekWeeklyCSV(); }
+function downloadDailyCSV() { downloadSelectedWeekDailyCSV(); }
+function downloadCoverageCSV() { downloadSelectedWeekCoverageCSV(); }
+
+
+function renderMultiWeekSummary(cfg) {
+  const horizon = cfg.planningHorizon;
+  document.getElementById("mwWeeks").innerText = horizon;
+  document.getElementById("mwHcStrategy").innerText = cfg.hcStrategy === "weeklyRecalc" ? "Weekly Recalc" : "Fixed Pool";
+
+  if (!multiWeekResults.length) {
+    document.getElementById("mwHighestHC").innerText = 0;
+    document.getElementById("mwToughestWeek").innerText = "Week 1";
+    return;
+  }
+
+  const highestHC = Math.max(...multiWeekResults.map(r => r.appliedHC || 0), 0);
+  document.getElementById("mwHighestHC").innerText = highestHC;
+
+  let toughest = multiWeekResults[0];
+  multiWeekResults.forEach(r => {
+    if ((r.netGapTotal || 0) < (toughest.netGapTotal || 0)) toughest = r;
+  });
+  document.getElementById("mwToughestWeek").innerText = toughest ? `Week ${toughest.week}` : "Week 1";
+}
+
+function runSingleWeekScenario(rows, cfg, weekIndex, forcedHC = null, previousWeekResult = null) {
+  setDemandContext(rows);
+  weeklySummary = calculateWeeklySummary(cfg);
+
+  const carryInAgents = previousWeekResult && Array.isArray(previousWeekResult.generatedAgents)
+    ? previousWeekResult.generatedAgents.filter(a => Array.isArray(a.workMask) && a.workMask[6])
+    : [];
+
+  let targetHC;
+  if (cfg.planningMode === "fixed") {
+    targetHC = Math.max(1, Math.floor(forcedHC != null ? forcedHC : (cfg.availableHC || 0)));
+    generateBaseAgents(cfg, targetHC);
+    assignOffDays(cfg);
+    buildDailyAndWeeklyOutputs(cfg);
+    buildCoverageOutputs(cfg, carryInAgents);
+  } else {
+    targetHC = forcedHC != null ? forcedHC : weeklySummary.suggestedTarget;
+
+    const hardCap = Math.ceil(
+      Math.max(
+        weeklySummary.suggestedTarget * 1.25,
+        weeklySummary.peakConcurrent * (cfg.operatingDays / Math.max(1, cfg.workingDays)) * 1.20
+      )
+    );
+
+    let attempts = 0;
+    let solved = false;
+
+    while (attempts < 6 && !solved) {
+      attempts++;
+      generateBaseAgents(cfg, targetHC);
+      assignOffDays(cfg);
+      buildDailyAndWeeklyOutputs(cfg);
+      buildCoverageOutputs(cfg, carryInAgents);
+
+      const requiredRows = coverageRows.filter(r => Number(r.Required) > 0);
+
+      const zeroScheduledRisk = requiredRows.some(r =>
+        Number(r.Required) >= 2 && Number(r["Scheduled Count"]) === 0
+      );
+
+      const gapMap = buildCoverageGapMap(gapRows);
+      const worstGap = requiredRows.length
+        ? Math.min(...requiredRows.map(r => gapMap.get(`${r.Day}|${r.Interval}`) ?? 0))
+        : 0;
+
+      const avgCoverageRatio = requiredRows.length
+        ? requiredRows.reduce((sum, r) => {
+            const req = Number(r.Required);
+            const prod = Number(r["Productive Count"]);
+            return sum + Math.min(1, req > 0 ? prod / req : 1);
+          }, 0) / requiredRows.length
+        : 1;
+
+      const edgeRows = requiredRows.filter((r, idx, arr) => idx < 4 || idx >= arr.length - 4);
+      const edgeCoverageRatio = edgeRows.length
+        ? edgeRows.reduce((sum, r) => {
+            const req = Number(r.Required);
+            const prod = Number(r["Productive Count"]);
+            return sum + Math.min(1, req > 0 ? prod / req : 1);
+          }, 0) / edgeRows.length
+        : 1;
+
+      const acceptableGap = -Math.max(2, Math.ceil(weeklySummary.peakConcurrent * 0.08));
+
+      if (!zeroScheduledRisk && worstGap >= acceptableGap && avgCoverageRatio >= 0.90 && edgeCoverageRatio >= 0.92) {
+        solved = true;
+      } else {
+        const uplift = Math.max(2, Math.ceil(targetHC * 0.03));
+        const nextTarget = Math.min(hardCap, targetHC + uplift);
+        if (nextTarget === targetHC) solved = true;
+        else targetHC = nextTarget;
+      }
+    }
+  }
+
+  const gapTotal = gapRows.reduce((sum, row) => sum + Number(row["Over/Under"] || 0), 0);
+
+  return {
+    week: weekIndex,
+    cfg: { ...cfg },
+    rows: cloneRows(rows),
+    summary: { ...weeklySummary },
+    appliedHC: generatedAgents.length,
+    dailyDetailedRows: cloneRows(dailyDetailedRows),
+    weeklyRosterRows: cloneRows(weeklyRosterRows),
+    coverageRows: cloneRows(coverageRows),
+    gapRows: cloneRows(gapRows),
+    generatedAgents: cloneRows(generatedAgents),
+    netGapTotal: Number(gapTotal.toFixed(2)),
+    carryInCount: carryInAgents.length
+  };
+}
+
+function renderWeekResult(weekIndex) {
+  const result = multiWeekResults.find(r => r.week === weekIndex);
+  if (!result) return;
+
+  activeWeekIndex = weekIndex;
+  setDemandContext(result.rows);
+  weeklySummary = { ...result.summary };
+  generatedAgents = cloneRows(result.generatedAgents);
+  dailyDetailedRows = cloneRows(result.dailyDetailedRows);
+  weeklyRosterRows = cloneRows(result.weeklyRosterRows);
+  coverageRows = cloneRows(result.coverageRows);
+  gapRows = cloneRows(result.gapRows);
+
+  renderRequirementPreview();
+  renderWeeklySummary(result.cfg, result.appliedHC);
+
+  renderTableRows("#dailyScheduleTable tbody", dailyDetailedRows.map(r => `<tr><td>${r.Agent}</td><td>${r.Day}</td><td>${r.Start}</td><td>${r.End}</td><td>${r.Meal}</td><td>${r["Break 1"]}</td><td>${r["Break 2"]}</td></tr>`).join(""));
+
+  renderTableRows("#weeklyRosterTable tbody", weeklyRosterRows.map(r => `<tr><td>${r.Agent}</td><td>${r.Mon}</td><td>${r.Tue}</td><td>${r.Wed}</td><td>${r.Thu}</td><td>${r.Fri}</td><td>${r.Sat}</td><td>${r.Sun}</td></tr>`).join(""));
+
+  renderTableRows("#coverageTable tbody", coverageRows.map(r => `<tr><td>${r.Day}</td><td>${r.Interval}</td><td>${r.Required}</td><td>${r["Scheduled Count"]}</td><td>${r["Productive Count"]}</td></tr>`).join(""));
+
+  renderTableRows("#gapTable tbody", gapRows.map(r => `<tr><td>${r.Day}</td><td>${r.Interval}</td><td>${r.Required}</td><td>${r["Productive Coverage"]}</td><td>${r["Over/Under"]}</td></tr>`).join(""));
+
+  drawCharts(result.cfg);
+  buildPlannerSummary(result.cfg);
+  renderWeekTabs();
+  document.getElementById("weekPreviewSelect").value = String(weekIndex);
+}
+
+
 function generateSchedules() {
-  if (!weeklyMatrixRows.length) {
+  const cfg = buildConfig();
+  const horizon = cfg.planningHorizon;
+  const pattern = cfg.requirementPattern;
+
+  if (!(weeklyRequirementSets[1] || []).length) {
     alert("Please upload a weekly requirement file first.");
     return;
   }
 
-  const cfg = buildConfig();
-  weeklySummary = calculateWeeklySummary(cfg);
-
-  if (cfg.planningMode === "fixed") {
-    const targetHC = Math.max(1, Math.floor(cfg.availableHC || 0));
-    if (targetHC <= 0) {
-      alert("Please enter a valid Available HC.");
-      return;
-    }
-
-    generateBaseAgents(cfg, targetHC);
-    assignOffDays(cfg);
-    buildDailyAndWeeklyOutputs(cfg);
-    buildCoverageOutputs(cfg);
-    renderWeeklySummary(cfg, generatedAgents.length);
-    drawCharts(cfg);
-    buildPlannerSummary(cfg);
-    return;
-  }
-
-  let targetHC = weeklySummary.suggestedTarget;
-
-  const hardCap = Math.ceil(
-    Math.max(
-      weeklySummary.suggestedTarget * 1.25,
-      weeklySummary.peakConcurrent * (cfg.operatingDays / Math.max(1, cfg.workingDays)) * 1.20
-    )
-  );
-
-  let attempts = 0;
-  let solved = false;
-
-  while (attempts < 6 && !solved) {
-    attempts++;
-
-    generateBaseAgents(cfg, targetHC);
-    assignOffDays(cfg);
-    buildDailyAndWeeklyOutputs(cfg);
-    buildCoverageOutputs(cfg);
-
-    const requiredRows = coverageRows.filter(r => Number(r.Required) > 0);
-
-    const zeroScheduledRisk = requiredRows.some(r =>
-      Number(r.Required) >= 2 && Number(r["Scheduled Count"]) === 0
-    );
-
-    const worstGap = requiredRows.length
-      ? Math.min(...requiredRows.map(r => {
-          const match = gapRows.find(g => g.Day === r.Day && g.Interval === r.Interval);
-          return match ? Number(match["Over/Under"]) : 0;
-        }))
-      : 0;
-
-    const avgCoverageRatio = requiredRows.length
-      ? requiredRows.reduce((sum, r) => {
-          const req = Number(r.Required);
-          const prod = Number(r["Productive Count"]);
-          return sum + Math.min(1, req > 0 ? prod / req : 1);
-        }, 0) / requiredRows.length
-      : 1;
-
-    const edgeRows = requiredRows.filter((r, idx, arr) => idx < 4 || idx >= arr.length - 4);
-    const edgeCoverageRatio = edgeRows.length
-      ? edgeRows.reduce((sum, r) => {
-          const req = Number(r.Required);
-          const prod = Number(r["Productive Count"]);
-          return sum + Math.min(1, req > 0 ? prod / req : 1);
-        }, 0) / edgeRows.length
-      : 1;
-
-    const acceptableGap = -Math.max(2, Math.ceil(weeklySummary.peakConcurrent * 0.08));
-
-    if (!zeroScheduledRisk && worstGap >= acceptableGap && avgCoverageRatio >= 0.90 && edgeCoverageRatio >= 0.92) {
-      solved = true;
-    } else {
-      const uplift = Math.max(2, Math.ceil(targetHC * 0.03));
-      const nextTarget = Math.min(hardCap, targetHC + uplift);
-      if (nextTarget === targetHC) solved = true;
-      else targetHC = nextTarget;
+  if (pattern === "different" && horizon > 1) {
+    for (let i = 1; i <= horizon; i++) {
+      if (!(weeklyRequirementSets[i] || []).length) {
+        alert(`Please upload Week ${i} requirement file.`);
+        return;
+      }
     }
   }
 
-  renderWeeklySummary(cfg, generatedAgents.length);
-  drawCharts(cfg);
-  buildPlannerSummary(cfg);
+  const generateBtn = document.querySelector('button[onclick="generateSchedules()"]');
+  const originalBtnText = generateBtn ? generateBtn.innerText : "";
+  if (generateBtn) {
+    generateBtn.disabled = true;
+    generateBtn.innerText = `Generating ${horizon} Week${horizon > 1 ? 's' : ''}...`;
+  }
+  const plannerSummaryEl = document.getElementById("plannerSummaryBox") || document.getElementById("plannerSummary");
+  if (plannerSummaryEl) {
+    plannerSummaryEl.innerHTML = `<div class="summary-item">Generating ${horizon} week${horizon > 1 ? 's' : ''}. Please keep this tab open until the outputs refresh.</div>`;
+  }
+
+  setTimeout(() => {
+    const baseWeekRows = getWeekRowsForRun(1);
+    setDemandContext(baseWeekRows);
+    const baseSummary = calculateWeeklySummary(cfg);
+
+    let fixedPoolHC = null;
+    if (cfg.planningMode === "fixed") {
+      fixedPoolHC = Math.max(1, Math.floor(cfg.availableHC || 0));
+      if (fixedPoolHC <= 0) {
+        if (generateBtn) {
+          generateBtn.disabled = false;
+          generateBtn.innerText = originalBtnText;
+        }
+        alert("Please enter a valid Available HC.");
+        return;
+      }
+    } else if (cfg.hcStrategy === "fixedPool") {
+      fixedPoolHC = baseSummary.suggestedTarget;
+    }
+
+    multiWeekResults = [];
+
+    let previousWeekResult = null;
+    for (let weekIndex = 1; weekIndex <= horizon; weekIndex++) {
+      const rows = getWeekRowsForRun(weekIndex);
+      const forcedHC = cfg.hcStrategy === "fixedPool" ? fixedPoolHC : null;
+      const result = runSingleWeekScenario(rows, cfg, weekIndex, forcedHC, previousWeekResult);
+      multiWeekResults.push(result);
+      previousWeekResult = result;
+    }
+
+    renderMultiWeekSummary(cfg);
+    renderWeekResult(activeWeekIndex <= horizon ? activeWeekIndex : 1);
+
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.innerText = originalBtnText;
+    }
+  }, 30);
 }
 </script>
 </body>
