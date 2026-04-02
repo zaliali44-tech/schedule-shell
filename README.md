@@ -1,4 +1,4 @@
-# schedule-shell-generator.html
+
 # 📅 Weekly Staffing Scenario Planner
 
 A lightweight, browser-based tool for operations and workforce planning teams to estimate headcount requirements and generate weekly shift schedules — instantly, with no sign-up or installation needed.
